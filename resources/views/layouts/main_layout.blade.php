@@ -8,32 +8,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Labour-App</title>
-    <link rel="icon" type="image/png" sizes="16x16" href="../public/assets/images/logo168.jpg" />
+    {{-- <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/images/logo168.jpg') }}" /> --}}
     <!-- Custom CSS -->
 
-    <link
-        rel="{{ URL::asset('stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css') }}"
-        ntegrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <link rel="{{ URL::asset('stylesheet" type="text/css" href="../public/assets/extra-libs/multicheck/multicheck.css') }}" />
-    <link href="{{ URL::asset('../public/assets/libs/datatables.net-bs4/css/dataTables.bootstrap4.css') }}" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ asset('assets/extra-libs/multicheck/multicheck.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/libs/datatables.net-bs4/css/dataTables.bootstrap4.css') }}" />
 
-    <script src="{{ URL::asset('../public/assets/libs/jquery/dist/jquery.min.js') }}"></script>
-    <script src="{{ URL::asset('../public/assets/extra-libs/DataTables/datatables.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/jquery/dist/jquery.min.js') }}"></script>
+    <script src="{{ asset('assets/extra-libs/DataTables/datatables.min.js') }}"></script>
 
-    <link rel="stylesheet" type="text/css" href="{{ URL::asset('../public/assets/libs/select2/dist/css/select2.min.css') }}" />
-    <script src="{{ URL::asset('../public/assets/libs/select2/dist/js/select2.full.min.js') }}"></script>
-    <script src="{{ URL::asset('../public/assets/libs/select2/dist/js/select2.min.js') }}"></script>
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/libs/select2/dist/css/select2.min.css') }}" />
+    <script src="{{ asset('assets/libs/select2/dist/js/select2.full.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/select2/dist/js/select2.min.js') }}"></script>
     <!-- MDB -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/4.2.0/mdb.min.css" rel="stylesheet" />
     
-    <link rel="stylesheet" type="text/css"
-        href="{{ URL::asset('../public/assets/libs/jquery-minicolors/jquery.minicolors.css') }}" />
-    <link rel="stylesheet" type="text/css"
-        href="{{ URL::asset('../public/assets/libs/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css') }}" />
-    <link rel="stylesheet" type="text/css" href="{{ URL::asset('../public/assets/libs/quill/dist/quill.snow.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/libs/jquery-minicolors/jquery.minicolors.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/libs/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/libs/quill/dist/quill.snow.css') }}" />
 
 
-    <link href="{{ URL::asset('../public/dist/css/style.min.css') }}" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ asset('dist/css/style.min.css') }}" />
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-duration-format/2.2.2/moment-duration-format.min.js"></script>
@@ -67,14 +63,14 @@
                         <b class="logo-icon ps-2">
                             <!--You can put here icon as well // <i class="wi wi-sunset"></i> //-->
                             <!-- Dark Logo icon -->
-                            <img src="{{ URL::asset('../public/assets/images/logo168.jpg') }}" alt="homepage"
-                                class="light-logo" width="65" />
+                            {{-- <img src="{{ asset('assets/images/logo168.jpg') }}" alt="homepage"
+                                class="light-logo" width="65" /> --}}
                         </b>
                         <!--End Logo icon -->
                         <!-- Logo text -->
                         <span class="logo-text ms-2">
                             <!-- dark Logo text -->
-                            <img src="{{ URL::asset('../public/assets/images/logo-text.png') }}" alt="homepage"
+                            <img src="{{ asset('assets/images/logo-text.png') }}" alt="homepage"
                                 class="light-logo" />
                         </span>
                         <!-- Logo icon -->
@@ -273,8 +269,7 @@
                 "
                                 href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
                                 aria-expanded="false">
-                                <img src="{{ URL::asset('../public/assets/images/logo168.jpg') }}" alt="user"
-                                    class="rounded-circle" width="50" />
+                              <i class="mdi mdi-account-circle fs-4"></i>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end user-dd animated"
                                 aria-labelledby="navbarDropdown">
@@ -369,14 +364,6 @@
                                 href="{{ route('report.index') }}" aria-expanded="false"><i
                                     class="mdi mdi-file-pdf"></i><span class="hide-menu">รายงาน</span></a>
                         </li>
-
-                        @if (Auth::user()->type == 'MasterAdmin')
-                        <li class="sidebar-item">
-                            <a class="sidebar-link waves-effect waves-dark sidebar-link"
-                                href="{{ route('action-logs.index') }}" aria-expanded="false"><i
-                                    class="mdi mdi-file"></i><span class="hide-menu">รายงาน</span></a>
-                        </li>
-                        @endif
 
                         {{-- <li class="sidebar-item">
                             <a class="sidebar-link waves-effect waves-dark sidebar-link" href="grid.html"
@@ -591,19 +578,19 @@
 
 
 <!-- Bootstrap tether Core JavaScript -->
-<script src="{{ URL::asset('../public/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ asset('assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
 <!-- slimscrollbar scrollbar JavaScript -->
-<script src="{{ URL::asset('../public/assets/libs/perfect-scrollbar/dist/perfect-scrollbar.jquery.min.js') }}"></script>
-<script src="{{ URL::asset('../public/assets/extra-libs/sparkline/sparkline.js') }}"></script>
+<script src="{{ asset('assets/libs/perfect-scrollbar/dist/perfect-scrollbar.jquery.min.js') }}"></script>
+<script src="{{ asset('assets/extra-libs/sparkline/sparkline.js') }}"></script>
 <!--Wave Effects -->
-<script src="{{ URL::asset('../public/dist/js/waves.js') }}"></script>
+<script src="{{ asset('dist/js/waves.js') }}"></script>
 <!--Menu sidebar -->
-<script src="{{ URL::asset('../public/dist/js/sidebarmenu.js') }}"></script>
+<script src="{{ asset('dist/js/sidebarmenu.js') }}"></script>
 <!--Custom JavaScript -->
-<script src="{{ URL::asset('../public/dist/js/custom.min.js') }}"></script>
+<script src="{{ asset('dist/js/custom.min.js') }}"></script>
 <!-- this page js -->
-<script src="{{ URL::asset('../public/assets/extra-libs/multicheck/datatable-checkbox-init.js') }}"></script>
-<script src="{{ URL::asset('../public/assets/extra-libs/multicheck/jquery.multicheck.js') }}"></script>
+<script src="{{ asset('assets/extra-libs/multicheck/datatable-checkbox-init.js') }}"></script>
+<script src="{{ asset('assets/extra-libs/multicheck/jquery.multicheck.js') }}"></script>
 
 
 
