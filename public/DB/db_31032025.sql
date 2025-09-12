@@ -13,11 +13,11 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 
--- Dumping database structure for labour_db
-CREATE DATABASE IF NOT EXISTS `labour_db` /*!40100 DEFAULT CHARACTER SET utf8 */;
-USE `labour_db`;
+-- Dumping database structure for charoen_labours
+CREATE DATABASE IF NOT EXISTS `charoen_labours` /*!40100 DEFAULT CHARACTER SET utf8 */;
+USE `charoen_labours`;
 
--- Dumping structure for table labour_db.agency
+-- Dumping structure for table charoen_labours.agency
 CREATE TABLE IF NOT EXISTS `agency` (
   `agency_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `agency_name` varchar(255) NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `agency` (
   PRIMARY KEY (`agency_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
 
--- Dumping data for table labour_db.agency: ~6 rows (approximately)
+-- Dumping data for table charoen_labours.agency: ~6 rows (approximately)
 /*!40000 ALTER TABLE `agency` DISABLE KEYS */;
 INSERT INTO `agency` (`agency_id`, `agency_name`, `agency_tax`, `agency_nationality`, `agency_address`, `agency_email`, `agency_contact`, `agency_phone`, `agency_note`, `created_by`, `updated_by`, `created_at`, `updated_at`) VALUES
 	(1, 'ICDG Trading Co.,Ltd (Moe Moe Family)', '5654-4582 update', 'myanmar', 'No.7/B, G/F, Saytanar Street, &th Ward,\r\nKamayut T/S, Yangon.', 'ICDGtrading@gmail.com', 'Daw Ei shwe sin', '09787193532', 'KO TIN SOE', 'อนุชา โยธานันท์', 'Jirawatt', '2022-06-20 18:45:47', '2022-11-16 04:11:28'),
@@ -48,7 +48,7 @@ INSERT INTO `agency` (`agency_id`, `agency_name`, `agency_tax`, `agency_national
 	(8, 'Real Path Co.,Ltd', '-', 'myanmar', 'No.399, Ground Floor, Saytanar 2rd Street, 43 Ward, North Dagon Township, Yangon Region, Myanmar.', 'realpath2019@gmail.com', 'Daw Aye Thandar Oo', '+959 768 603 895', '+959 768 603 895,\r\n+959 515 7057,\r\n+959 767 867 840', 'Mr. Noy', NULL, '2024-05-18 10:43:56', '2024-05-18 10:43:56');
 /*!40000 ALTER TABLE `agency` ENABLE KEYS */;
 
--- Dumping structure for table labour_db.amphures
+-- Dumping structure for table charoen_labours.amphures
 CREATE TABLE IF NOT EXISTS `amphures` (
   `id` int(5) NOT NULL AUTO_INCREMENT,
   `code` varchar(4) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS `amphures` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1007 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table labour_db.amphures: 998 rows
+-- Dumping data for table charoen_labours.amphures: 998 rows
 /*!40000 ALTER TABLE `amphures` DISABLE KEYS */;
 INSERT INTO `amphures` (`id`, `code`, `name_th`, `name_en`, `province_id`) VALUES
 	(1, '1001', 'เขตพระนคร', 'Khet Phra Nakhon', 1),
@@ -1061,7 +1061,7 @@ INSERT INTO `amphures` (`id`, `code`, `name_th`, `name_en`, `province_id`) VALUE
 	(1006, '3808', 'บุ่งคล้า', 'Bung Khla', 77);
 /*!40000 ALTER TABLE `amphures` ENABLE KEYS */;
 
--- Dumping structure for table labour_db.company
+-- Dumping structure for table charoen_labours.company
 CREATE TABLE IF NOT EXISTS `company` (
   `company_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `company_name` varchar(255) NOT NULL DEFAULT '',
@@ -1092,7 +1092,7 @@ CREATE TABLE IF NOT EXISTS `company` (
   KEY `company_company_id_index` (`company_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=112 DEFAULT CHARSET=utf8;
 
--- Dumping data for table labour_db.company: ~85 rows (approximately)
+-- Dumping data for table charoen_labours.company: ~85 rows (approximately)
 /*!40000 ALTER TABLE `company` DISABLE KEYS */;
 INSERT INTO `company` (`company_id`, `company_name`, `company_tax`, `company_address`, `company_province`, `company_amphur`, `company_district`, `company_zipcode`, `company_contact`, `company_phone`, `company_email`, `company_fax`, `company_contact1`, `company_contact2`, `company_contact3`, `company_contact4`, `company_contact5`, `company_type`, `company_contact_sale`, `company_note`, `company_status`, `created_by`, `updated_by`, `created_at`, `updated_at`) VALUES
 	(4, 'เก่ง เอ็นจิเนียริ่ง  บจก.', '0105559116202', '9/206', '59', '814', '740113', '74000', 'คุณ เก๋', '086 372 0036', 'kae@kengengineering.com', '-', 'นายรุ่งโรจน์ ผลจันทร์', NULL, NULL, NULL, NULL, 'ก่อสร้าง', 'ตุ๊กกี้', NULL, 'enable', 'Jirawatt', 'JIRAWATT SIRIKARNJANAVORAKUL', '2022-11-14 09:53:40', '2023-05-04 13:11:04'),
@@ -1205,7 +1205,7 @@ INSERT INTO `company` (`company_id`, `company_name`, `company_tax`, `company_add
 	(111, 'บริษัท เดอะเฮฟเว่น เซาว์น่า จำกัด', '0105546060238', '119 อาคารบีโอเอส ถนนมเหสักข์', '4', 'Select a Amphur', '100403', '10500', 'คุณรัตน์', '0863432186', 'importer168@gmail.com', '-', 'นายสมภพ สุขศรี', 'นายภัทรพร ทูลไทสงค์', NULL, NULL, NULL, 'ให้บริการอาหาร เครื่องดื่มและอื่นๆ', NULL, NULL, 'enable', 'Dhanpimol', NULL, '2025-03-29 11:24:20', '2025-03-29 11:24:20');
 /*!40000 ALTER TABLE `company` ENABLE KEYS */;
 
--- Dumping structure for table labour_db.districts
+-- Dumping structure for table charoen_labours.districts
 CREATE TABLE IF NOT EXISTS `districts` (
   `id` varchar(6) COLLATE utf8mb4_unicode_ci NOT NULL,
   `zip_code` int(11) NOT NULL,
@@ -1215,7 +1215,7 @@ CREATE TABLE IF NOT EXISTS `districts` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='InnoDB free: 8192 kB';
 
--- Dumping data for table labour_db.districts: 8,852 rows
+-- Dumping data for table charoen_labours.districts: 8,852 rows
 /*!40000 ALTER TABLE `districts` DISABLE KEYS */;
 INSERT INTO `districts` (`id`, `zip_code`, `name_th`, `name_en`, `amphure_id`) VALUES
 	('100101', 10200, 'พระบรมมหาราชวัง', 'Phra Borom Maha Ratchawang', 1),
@@ -10072,7 +10072,7 @@ INSERT INTO `districts` (`id`, `zip_code`, `name_th`, `name_en`, `amphure_id`) V
 	('961305', 10800, 'แขวงวงศ์สว่าง', 'wongswang', 29);
 /*!40000 ALTER TABLE `districts` ENABLE KEYS */;
 
--- Dumping structure for table labour_db.failed_jobs
+-- Dumping structure for table charoen_labours.failed_jobs
 CREATE TABLE IF NOT EXISTS `failed_jobs` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `uuid` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -10085,11 +10085,11 @@ CREATE TABLE IF NOT EXISTS `failed_jobs` (
   UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table labour_db.failed_jobs: ~0 rows (approximately)
+-- Dumping data for table charoen_labours.failed_jobs: ~0 rows (approximately)
 /*!40000 ALTER TABLE `failed_jobs` DISABLE KEYS */;
 /*!40000 ALTER TABLE `failed_jobs` ENABLE KEYS */;
 
--- Dumping structure for table labour_db.labour
+-- Dumping structure for table charoen_labours.labour
 CREATE TABLE IF NOT EXISTS `labour` (
   `labour_id` bigint(20) NOT NULL AUTO_INCREMENT,
   `labour_prefix` enum('Mr','Ms','Mrs') DEFAULT NULL,
@@ -10133,7 +10133,7 @@ CREATE TABLE IF NOT EXISTS `labour` (
   KEY `labour_passport_number_index` (`labour_passport_number`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5219 DEFAULT CHARSET=utf8;
 
--- Dumping data for table labour_db.labour: ~2,916 rows (approximately)
+-- Dumping data for table charoen_labours.labour: ~2,916 rows (approximately)
 /*!40000 ALTER TABLE `labour` DISABLE KEYS */;
 INSERT INTO `labour` (`labour_id`, `labour_prefix`, `labour_number`, `labour_fullname`, `labour_sex`, `labour_nationality`, `labour_agency`, `labour_birthday`, `company_id`, `labour_passport_number`, `labour_passport_date_start`, `labour_passport_date_end`, `labour_visa_number`, `labour_visa_date_in`, `labour_visa_date_start`, `labour_visa_date_end`, `labour_workpremit_number`, `labour_labour_number`, `labour_workpremit_date_start`, `labour_workpremit_date_end`, `labour_day90_date_start`, `labour_day90_date_end`, `labour_tm_number`, `labour_jobdate_start`, `labour_resing_date`, `labour_escape_date`, `labour_status_job`, `labour_status`, `labour_note`, `labour_file_passport`, `labour_file_visa`, `labour_file_work`, `created_by`, `updated_by`, `created_at`, `updated_at`) VALUES
 	(1, 'Mr', NULL, 'RATH CHHON', 'male', 'cambodia', 2, '2000-06-06', 4, 'T0699636', '2022-09-06', '2027-09-06', 'e2824256', '2022-11-02', '2022-11-02', '2026-10-31', 'TH-7400650115599', 'TIP-keng001', '2022-11-02', '2026-11-01', '2022-11-02', '2026-10-31', 'py82437', '2022-11-02', NULL, NULL, 'job', 'enable', 'Keng engineering\r\n**นายจ้างต่อปี3-4 เอง', 'T0699636_Passport.pdf', NULL, NULL, 'Jirawatt', 'PACHAREEPORN BAIPUI', '2022-11-16 03:32:05', '2025-02-26 15:01:53'),
@@ -13417,7 +13417,7 @@ INSERT INTO `labour` (`labour_id`, `labour_prefix`, `labour_number`, `labour_ful
 	(5218, 'Mr', NULL, 'TUN TUN WIN', 'male', 'myanmar', 7, '1988-06-15', 102, 'MI154300', '2024-03-07', '2029-03-06', '-', '2024-03-11', '2024-03-11', '2025-02-13', '-', NULL, '2024-03-11', '2025-02-13', '2024-03-11', '2025-06-23', NULL, '2024-03-11', NULL, NULL, 'job', 'enable', '**นายจ้างฝากดูแล 90 วัน', 'MI154300_Passport.pdf', NULL, NULL, 'PHOPTHAM SAENGNGAM', NULL, '2025-03-31 10:19:48', '2025-03-31 10:19:48');
 /*!40000 ALTER TABLE `labour` ENABLE KEYS */;
 
--- Dumping structure for table labour_db.migrations
+-- Dumping structure for table charoen_labours.migrations
 CREATE TABLE IF NOT EXISTS `migrations` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -13425,7 +13425,7 @@ CREATE TABLE IF NOT EXISTS `migrations` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table labour_db.migrations: ~4 rows (approximately)
+-- Dumping data for table charoen_labours.migrations: ~4 rows (approximately)
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 	(1, '2014_10_12_000000_create_users_table', 1),
@@ -13434,7 +13434,7 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 	(4, '2019_12_14_000001_create_personal_access_tokens_table', 1);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 
--- Dumping structure for table labour_db.nationality
+-- Dumping structure for table charoen_labours.nationality
 CREATE TABLE IF NOT EXISTS `nationality` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `code` varchar(50) DEFAULT NULL,
@@ -13442,7 +13442,7 @@ CREATE TABLE IF NOT EXISTS `nationality` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 
--- Dumping data for table labour_db.nationality: ~4 rows (approximately)
+-- Dumping data for table charoen_labours.nationality: ~4 rows (approximately)
 /*!40000 ALTER TABLE `nationality` DISABLE KEYS */;
 INSERT INTO `nationality` (`id`, `code`, `name_th`) VALUES
 	(1, 'myanmar', 'พม่า'),
@@ -13451,7 +13451,7 @@ INSERT INTO `nationality` (`id`, `code`, `name_th`) VALUES
 	(4, 'vietnam', 'เวียดนาม');
 /*!40000 ALTER TABLE `nationality` ENABLE KEYS */;
 
--- Dumping structure for table labour_db.password_resets
+-- Dumping structure for table charoen_labours.password_resets
 CREATE TABLE IF NOT EXISTS `password_resets` (
   `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `token` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -13459,11 +13459,11 @@ CREATE TABLE IF NOT EXISTS `password_resets` (
   KEY `password_resets_email_index` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table labour_db.password_resets: ~0 rows (approximately)
+-- Dumping data for table charoen_labours.password_resets: ~0 rows (approximately)
 /*!40000 ALTER TABLE `password_resets` DISABLE KEYS */;
 /*!40000 ALTER TABLE `password_resets` ENABLE KEYS */;
 
--- Dumping structure for table labour_db.personal_access_tokens
+-- Dumping structure for table charoen_labours.personal_access_tokens
 CREATE TABLE IF NOT EXISTS `personal_access_tokens` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `tokenable_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -13479,11 +13479,11 @@ CREATE TABLE IF NOT EXISTS `personal_access_tokens` (
   KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table labour_db.personal_access_tokens: ~0 rows (approximately)
+-- Dumping data for table charoen_labours.personal_access_tokens: ~0 rows (approximately)
 /*!40000 ALTER TABLE `personal_access_tokens` DISABLE KEYS */;
 /*!40000 ALTER TABLE `personal_access_tokens` ENABLE KEYS */;
 
--- Dumping structure for table labour_db.provinces
+-- Dumping structure for table charoen_labours.provinces
 CREATE TABLE IF NOT EXISTS `provinces` (
   `id` int(5) NOT NULL AUTO_INCREMENT,
   `code` varchar(2) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -13493,7 +13493,7 @@ CREATE TABLE IF NOT EXISTS `provinces` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=78 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table labour_db.provinces: 77 rows
+-- Dumping data for table charoen_labours.provinces: 77 rows
 /*!40000 ALTER TABLE `provinces` DISABLE KEYS */;
 INSERT INTO `provinces` (`id`, `code`, `name_th`, `name_en`, `geography_id`) VALUES
 	(1, '10', 'กรุงเทพมหานคร', 'Bangkok', 2),
@@ -13575,7 +13575,7 @@ INSERT INTO `provinces` (`id`, `code`, `name_th`, `name_en`, `geography_id`) VAL
 	(77, '97', 'บึงกาฬ', 'buogkan', 3);
 /*!40000 ALTER TABLE `provinces` ENABLE KEYS */;
 
--- Dumping structure for table labour_db.settings
+-- Dumping structure for table charoen_labours.settings
 CREATE TABLE IF NOT EXISTS `settings` (
   `set_id` bigint(20) NOT NULL,
   `set_name` varchar(50) NOT NULL DEFAULT '',
@@ -13584,7 +13584,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
   `updated_at` timestamp NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- Dumping data for table labour_db.settings: ~4 rows (approximately)
+-- Dumping data for table charoen_labours.settings: ~4 rows (approximately)
 /*!40000 ALTER TABLE `settings` DISABLE KEYS */;
 INSERT INTO `settings` (`set_id`, `set_name`, `set_expire`, `craeted_at`, `updated_at`) VALUES
 	(1, 'passport', 90, '0000-00-00 00:00:00', '2024-06-10 10:46:19'),
@@ -13593,7 +13593,7 @@ INSERT INTO `settings` (`set_id`, `set_name`, `set_expire`, `craeted_at`, `updat
 	(4, 'work', 30, '0000-00-00 00:00:00', '2024-06-10 10:46:19');
 /*!40000 ALTER TABLE `settings` ENABLE KEYS */;
 
--- Dumping structure for table labour_db.users
+-- Dumping structure for table charoen_labours.users
 CREATE TABLE IF NOT EXISTS `users` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -13609,7 +13609,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   UNIQUE KEY `users_email_unique` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table labour_db.users: ~9 rows (approximately)
+-- Dumping data for table charoen_labours.users: ~9 rows (approximately)
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `remember_token`, `type`, `status`, `created_at`, `updated_at`) VALUES
 	(1, 'อนุชา โยธานันท์', 'ap.anucha@hotmail.com', NULL, '$2y$10$y2SNR1iRJn1hyXCa3yMEnONldxvK930n87YaIkGzVRT6EcWsp2gPO', 'yLC20l3HH8k5IOq6tb6kcRDunKq2nXcTWLDInU3qUy0eQVmlywDWYYaVHjNb', 'MasterAdmin', 'enable', '2022-06-17 08:52:38', '2022-06-18 09:39:06'),
@@ -13625,7 +13625,7 @@ INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `re
 	(14, 'THUZAR WIN PYAE', 'THUZARWINPYAE@GMAIL.COM', NULL, '$2y$10$FSZxcaEOpJHWujxWulvkaegoavQ0NP3JDobrN.YKm5mI0gyX74u0u', 'pcyG0e3MzweGiP7Q4oq7E5jZA9eFC1pgma1oRbQeFyGNUgeoHwHjELB52uyh', 'Admin', 'enable', '2024-06-18 09:07:08', '2024-06-18 09:19:33');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 
--- Dumping structure for table labour_db.zipcodes
+-- Dumping structure for table charoen_labours.zipcodes
 CREATE TABLE IF NOT EXISTS `zipcodes` (
   `ZIPCODE_ID` int(11) NOT NULL AUTO_INCREMENT,
   `district_code` varchar(6) COLLATE utf8_bin NOT NULL,
@@ -13635,7 +13635,7 @@ CREATE TABLE IF NOT EXISTS `zipcodes` (
   KEY `zipcode` (`zipcode`)
 ) ENGINE=MyISAM AUTO_INCREMENT=7457 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
--- Dumping data for table labour_db.zipcodes: 7,456 rows
+-- Dumping data for table charoen_labours.zipcodes: 7,456 rows
 /*!40000 ALTER TABLE `zipcodes` DISABLE KEYS */;
 INSERT INTO `zipcodes` (`ZIPCODE_ID`, `district_code`, `zipcode`) VALUES
 	(1, '100101', '10200'),
