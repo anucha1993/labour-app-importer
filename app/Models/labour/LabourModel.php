@@ -8,6 +8,8 @@ use App\Models\company\CompanyModel;
 use App\Models\agency\AgencyModel;
 use App\Models\ActionLog;
 use Illuminate\Support\Facades\Auth;
+use App\Models\labour\LabourPaymentType;
+use App\Models\labour\LabourPaymentHistory;
 
 class LabourModel extends Model
 {
@@ -58,6 +60,23 @@ class LabourModel extends Model
     public function agency()
     {
         return $this->belongsTo(AgencyModel::class, 'labour_agency', 'agency_id');
+    }
+
+    public function paymentTypes()
+    {
+        return $this->hasMany(LabourPaymentType::class, 'labour_id', 'labour_id');
+    }
+
+    public function paymentHistories()
+    {
+        return $this->hasManyThrough(
+            LabourPaymentHistory::class,
+            LabourPaymentType::class,
+            'labour_id',
+            'payment_type_id',
+            'labour_id',
+            'payment_type_id'
+        );
     }
     
     protected static function booted()

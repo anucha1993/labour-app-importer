@@ -237,9 +237,18 @@ class LabourController extends Controller
         $agency = DB::table('agency')->get();
         $company = DB::table('company')->get();
 
-        $labour = LabourModel::where('labour_id', $labourModel->labour_id)->leftJoin('company', 'company.company_id', 'labour.company_id')->leftJoin('agency', 'agency.agency_id', 'labour.labour_agency')->leftJoin('nationality', 'nationality.code', 'labour.labour_nationality')->groupBy('labour.labour_id')->first();
+        $labour = LabourModel::with(['paymentTypes.histories'])
+            ->where('labour_id', $labourModel->labour_id)
+            ->leftJoin('company', 'company.company_id', 'labour.company_id')
+            ->leftJoin('agency', 'agency.agency_id', 'labour.labour_agency')
+            ->leftJoin('nationality', 'nationality.code', 'labour.labour_nationality')
+            ->groupBy('labour.labour_id')
+            ->first();
 
-        return view('labour.form-edit', compact('nationality', 'agency', 'company', 'labour'));
+        // Format payment data for view
+        $paymentTypes = $labour->paymentTypes ?? collect([]);
+
+        return view('labour.form-edit', compact('nationality', 'agency', 'company', 'labour', 'paymentTypes'));
     }
 
     /**

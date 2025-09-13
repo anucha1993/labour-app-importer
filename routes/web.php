@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\labour\labourMassUpdateController;
+use App\Http\Controllers\labour\LabourPaymentController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\settings\settingsController;
@@ -42,6 +43,14 @@ Route::get('/company/delete/{companyModel}', [App\Http\Controllers\company\Compa
 Route::post('/province', [App\Http\Controllers\company\CompanyController::class, 'province'])->name('province');
 Route::post('/amphur', [App\Http\Controllers\company\CompanyController::class, 'amphur'])->name('amphur');
 Route::post('/district', [App\Http\Controllers\company\CompanyController::class, 'district'])->name('district');
+
+//Payment Routes
+Route::post('/labour/payment-type', [LabourPaymentController::class, 'storePaymentType']);
+Route::post('/labour/payment-type/{paymentType}', [LabourPaymentController::class, 'updatePaymentType']);
+Route::delete('/labour/payment-type/{paymentType}', [LabourPaymentController::class, 'deletePaymentType']);
+Route::post('/labour/payment-history', [LabourPaymentController::class, 'storePaymentHistory']);
+Route::delete('/labour/payment-history/{paymentHistory}', [LabourPaymentController::class, 'deletePaymentHistory']);
+Route::delete('/labour/payment-history/{paymentHistory}', [LabourPaymentController::class, 'deletePaymentHistory']);
 
 //agency
 Route::get('agency',[\App\Http\Controllers\agency\AgencyController::class,'index'])->name('agency.index');
