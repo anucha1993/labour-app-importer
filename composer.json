@@ -16,8 +16,9 @@
         "laravel/ui": "^3.4",
         "maatwebsite/excel": "^3.1",
         "mpdf/mpdf": "^8.1",
-        "yajra/laravel-datatables-oracle": "^9.20",
-        "nesbot/carbon": "^2.0"
+        "nesbot/carbon": "^2.0",
+        "simplesoftwareio/simple-qrcode": "^4.2",
+        "yajra/laravel-datatables-oracle": "^9.20"
     },
     "require-dev": {
         "facade/ignition": "^2.5",

@@ -587,7 +587,7 @@
 
 <footer class="footer text-center">
     All Rights Reserved by The Importer 168. Co.,Ltd Designed and Developed by
-    <a href="https://www.wrappixel.com">Anucha Yothanan</a>.
+    <a href="https://www.wrappixel.com">PIM.DEV</a>.
   </footer>
 
 

@@ -2,14 +2,38 @@
 
 namespace App\Http\Controllers\labour;
 
+use Illuminate\Http\Request;
+use App\Models\labour\LabourModel;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Storage;
 use App\Models\labour\LabourPaymentType;
 use App\Models\labour\LabourPaymentHistory;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class LabourPaymentController extends Controller
 {
+
+    public function edit(LabourModel $labour)
+    {
+        //
+        $nationality = DB::table('nationality')->get();
+        $agency = DB::table('agency')->get();
+        $company = DB::table('company')->get();
+
+        $labour = LabourModel::with(['paymentTypes.histories'])
+            ->where('labour_id', $labour->labour_id)
+            ->leftJoin('company', 'company.company_id', 'labour.company_id')
+            ->leftJoin('agency', 'agency.agency_id', 'labour.labour_agency')
+            ->leftJoin('nationality', 'nationality.code', 'labour.labour_nationality')
+            ->groupBy('labour.labour_id')
+            ->first();
+
+        // Format payment data for view
+        $paymentTypes = $labour->paymentTypes ?? collect([]);
+
+        return view('labour.form-payment', compact('nationality', 'agency', 'company', 'labour', 'paymentTypes'));
+    }
+
     public function storePaymentType(Request $request)
     {
         $request->validate([

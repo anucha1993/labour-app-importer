@@ -81,32 +81,37 @@
                     </div>
                     <div class="col-md-2 mb-2">
                         <label for="">สถานะคนงาน</label>
-                    <select name="labour_status_job" id="labour_status" onchange="selectstatus(this)"
-                    class="form-control form-select">
-                    <!-- @php
-                        switch ($request->labour_status_job) {
-                            case 'job':
-                                echo '<option selected value="job">ทำงาน</option>';
-                                break;
-                            case 'resign':
-                                echo '<option selected value="resign">ลาออก</option>';
-                                break;
-                            case 'escape':
-                                echo '<option selected value="escape">หลบหนี</option>';
-                                break;
-
-                            default:
-                                echo '<option selected >ทำงาน</option>';
-                                break;
-                        }
-                    @endphp -->
-                    <option value="">ทั้งหมด</option>
-                    <option   @if($request->labour_status_job === 'job' ) selected @endif value="job">ทำงาน</option>
-                    <option   @if($request->labour_status_job === 'resign' ) selected @endif value="resign">ลาออก</option>
-                    <option   @if($request->labour_status_job === 'escape' ) selected @endif value="escape">หลบหนี</option>
-                </select>
+                        <select name="labour_status_job" id="labour_status" onchange="selectstatus(this)"
+                            class="form-control form-select">
+                            <option value="">ทั้งหมด</option>
+                            <option   @if($request->labour_status_job === 'job' ) selected @endif value="job">ทำงาน</option>
+                            <option   @if($request->labour_status_job === 'resign' ) selected @endif value="resign">ลาออก</option>
+                            <option   @if($request->labour_status_job === 'escape' ) selected @endif value="escape">หลบหนี</option>
+                        </select>
                     </div>
-                
+                    <div class="col-md-2 mb-2">
+                        <label for="">สถานะการชำระเงิน</label>
+                        <select name="payment_status" class="form-select form-control" onchange="this.form.submit()">
+                            <option value="">ทั้งหมด</option>
+                            <option value="pending" {{ request('payment_status') == 'pending' ? 'selected' : '' }}>มียอดค้างชำระ</option>
+                            <option value="completed" {{ request('payment_status') == 'completed' ? 'selected' : '' }}>ชำระครบ</option>
+                        </select>
+                    </div>            
+                    
+                    <div class="col-md-2 mb-2">
+    <label for="">ประเภทหักชำระ</label>
+    <select name="payment_type_id" class="form-select form-control" onchange="this.form.submit()">
+        <option value="">ทั้งหมด</option>
+        @foreach($paymentTypeOptions as $pt)
+            <option value="{{ $pt->id }}"
+                {{ request('payment_type_id') == $pt->id ? 'selected' : '' }}>
+                {{ $pt->payment_name }}
+            </option>
+        @endforeach
+    </select>
+</div>
+
+                    
                     <div class="col-md-2 mb-2 float-end">
                         <label for="">Search :</label>
                          <input type="text" class="form-control" name="keyword" placeholder="ค้นหาข้อมูล" value="{{ $request->keyword }}">
@@ -191,6 +196,8 @@
        
                 <th>เอเจนซี่</th>
                 <th>สถานะแรงงาน</th>
+                <th>Qr Code</th>
+                <th>ยอดค้างชำระ</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -218,21 +225,53 @@
                         @endif
                        
                     </td>
-                    <td>
-                        @php
-                if (Auth::user()->type == 'MasterAdmin') {
-                    $btn = '<a href="' . route('labour.show', $item->labour_id) . '" class="btn btn-info btn-sm">ดูข้อมูล</a> &nbsp;'; 
-                    $btn .= '<a href="' . route('labour.edit', $item->labour_id) . '" class="btn btn-success btn-sm text-white">แก้ไข</a> &nbsp;'; 
-                    $btn .= '<a href="' . route('labour.delete', $item->labour_id) . '" onclick="return confirm(`คุณต้องการลบข้อมูล ' . $item->labour_fullname . ' ใช่ไหม ?`)" class="btn btn-danger btn-sm">ลบ</a> &nbsp;';
-                } elseif (Auth::user()->type == 'Admin') {
-                    $btn = '<a href="' . route('labour.show', $item->labour_id) . '" class="btn btn-info btn-sm">ดูข้อมูล</a> &nbsp;';
-                    $btn .= '<a href="' . route('labour.edit', $item->labour_id) . '" class="btn btn-success btn-sm text-white">แก้ไข</a> &nbsp;';
-                } else {
-                    $btn = '<a href="' . route('labour.show', $item->labour_id) . '" class="btn btn-info btn-sm">ดูข้อมูล</a> &nbsp;';
-                }
-                echo $btn;
-            @endphp
-                    </td>
+                        <td>
+                            {{-- QR Code ปุ่ม --}}
+                            <a href="{{ route('labour.qrcodeDetail', $item->labour_id) }}" target="_blank">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&data={{ urlencode(route('labour.qrcodeDetail', $item->labour_id)) }}" alt="QR" width="60" height="60" />
+                            </a>
+                        </td>
+                        <td>
+                            @php
+                                $pendingTypes = $item->paymentTypes->where('status', '!=', 'completed');
+                            @endphp
+                            @if($pendingTypes->count() > 0)
+                                <button type="button" 
+                                        class="btn btn-warning btn-sm" 
+                                        data-bs-toggle="popover"
+                                        data-bs-html="true"
+                                        title="รายการค้างชำระ"
+                                        data-bs-content="@foreach($pendingTypes as $type)
+                                            <div>
+                                                {{ $type->payment_name }}: 
+                                                {{ number_format($type->total_amount - $type->calculatePaidAmount(), 2) }} บาท
+                                                ({{ $type->status }})
+                                            </div>
+                                        @endforeach">
+                                    {{ $pendingTypes->count() }} รายการ
+                                </button>
+                            @else
+                                <span class="badge bg-success">ไม่มีค้างชำระ</span>
+                            @endif
+                        </td>
+                        <td>
+                            @php
+                    if (Auth::user()->type == 'MasterAdmin') {
+                        $btn = '<a href="' . route('labour.show', $item->labour_id) . '" class="btn btn-info btn-sm">ดูข้อมูล</a> &nbsp;'; 
+                        $btn .= '<a href="' . route('labour.edit', $item->labour_id) . '" class="btn btn-success btn-sm text-white">แก้ไข</a> &nbsp;'; 
+                        $btn .= '<a href="' . route('labour.paymentEdit', $item->labour_id) . '" class="btn btn-primary btn-sm text-white">การชำระเงิน</a> &nbsp;';
+                        $btn .= '<a href="' . route('labour.delete', $item->labour_id) . '" onclick="return confirm(`คุณต้องการลบข้อมูล ' . $item->labour_fullname . ' ใช่ไหม ?`)" class="btn btn-danger btn-sm">ลบ</a> &nbsp;';
+                        
+                    } elseif (Auth::user()->type == 'Admin') {
+                        $btn = '<a href="' . route('labour.show', $item->labour_id) . '" class="btn btn-info btn-sm">ดูข้อมูล</a> &nbsp;';
+                        $btn .= '<a href="' . route('labour.edit', $item->labour_id) . '" class="btn btn-success btn-sm text-white">แก้ไข</a> &nbsp;';
+                         $btn .= '<a href="' . route('labour.paymentEdit', $item->labour_id) . '" class="btn btn-primary btn-sm text-white">การชำระเงิน</a> &nbsp;';
+                    } else {
+                        $btn = '<a href="' . route('labour.show', $item->labour_id) . '" class="btn btn-info btn-sm">ดูข้อมูล</a> &nbsp;';
+                    }
+                    echo $btn;
+                @endphp
+                        </td>
                 </tr>
             @empty
                 
@@ -249,6 +288,8 @@
     <script>
         $(document).ready(function() {
             $('.select2').select2();
+            // Popover สำหรับยอดค้างชำระ
+            $('[data-bs-toggle="popover"]').popover();
             //  $('#labour').DataTable();
 
             // $('#labour').DataTable({

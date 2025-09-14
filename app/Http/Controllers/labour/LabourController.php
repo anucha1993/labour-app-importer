@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\company\CompanyModel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\labour\LabourPaymentType;
 
 class LabourController extends Controller
 {
@@ -18,33 +19,46 @@ class LabourController extends Controller
         $this->middleware('auth');
     }
 
+
+        /**
+     * Show QR code detail page for a worker
+     */
+    public function qrcodeDetail($labourId)
+    {
+        $labour = LabourModel::with(['company', 'agency', 'paymentTypes.histories'])
+            ->findOrFail($labourId);
+
+        // คำนวณยอดค้างชำระแต่ละ payment type
+        $pendingTypes = $labour->paymentTypes->where('status', '!=', 'completed');
+
+        return view('labour.qrcode-detail', compact('labour', 'pendingTypes'));
+    }
+
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request )
-    {
-        $labour_status_job = $request->input('labour_status_job');
-        $company_id = $request->input('company_id');
-        $company_id = trim($company_id);
-        $company_id = (int) $company_id; // แปลงเป็น integer
-        $keyword = $request->input('keyword');
-        $start_date = $request->input('start_date');
-        $end_date = $request->input('end_date');
-        $column_name_type = $request->input('column_name_type');
-        $perPage = $request->input('per_page', 50);
+{
+    $labour_status_job = $request->input('labour_status_job');
+    $company_id        = (int) trim($request->input('company_id'));
+    $keyword           = $request->input('keyword');
+    $start_date        = $request->input('start_date');
+    $end_date          = $request->input('end_date');
+    $column_name_type  = $request->input('column_name_type');
+    $perPage           = $request->input('per_page', 50);
 
-        //dd($request);
-       // dd($company_id, gettype($company_id));
-     
-       $labours = LabourModel::when($company_id, function ($query) use ($company_id) {
+    // ใหม่: รับพารามิเตอร์ประเภทหักชำระ และสถานะยอดค้าง
+    $payment_type_id   = $request->input('payment_type_id'); // id ของประเภทหักชำระ
+    $payment_status    = $request->input('payment_status');  // 'pending' หรือ 'completed'
+
+    $labours = LabourModel::when($company_id, function ($query) use ($company_id) {
             return $query->where('company_id', $company_id);
         })
         ->when($labour_status_job, function ($query) use ($labour_status_job) {
             return $query->where('labour_status_job', $labour_status_job);
         })
-       
         ->when($column_name_type === 'labour_day90_date_end' && $start_date && $end_date, function ($query) use ($start_date, $end_date) {
             return $query->whereBetween('labour_day90_date_end', [$start_date, $end_date]);
         })
@@ -54,93 +68,51 @@ class LabourController extends Controller
         ->when($column_name_type === 'labour_workpremit_date_end' && $start_date && $end_date, function ($query) use ($start_date, $end_date) {
             return $query->whereBetween('labour_workpremit_date_end', [$start_date, $end_date]);
         })
-
-      
-
         ->when($keyword, function ($query, $keyword) {
             return $query->where(function ($q) use ($keyword) {
                 $q->whereHas('company', function ($q1) use ($keyword) {
-                    $q1->where('company_name', 'LIKE', '%' . $keyword . '%');
-                })
-                    ->orWhere('labour_passport_number', 'LIKE', '%' . $keyword . '%')
-                    ->orWhere('labour_visa_number', 'LIKE', '%' . $keyword . '%')
-                    ->orWhere('labour_fullname', 'LIKE', '%' . $keyword . '%')
-                    ->orWhereHas('agency', function ($q2) use ($keyword) {
+                        $q1->where('company_name', 'LIKE', '%' . $keyword . '%');
+                    })
+                  ->orWhere('labour_passport_number', 'LIKE', '%' . $keyword . '%')
+                  ->orWhere('labour_visa_number', 'LIKE', '%' . $keyword . '%')
+                  ->orWhere('labour_fullname', 'LIKE', '%' . $keyword . '%')
+                  ->orWhereHas('agency', function ($q2) use ($keyword) {
                         $q2->where('agency_name', 'LIKE', '%' . $keyword . '%');
-                    });
+                  });
             });
         })
 
-       ->paginate($perPage);
+        // ใหม่: ค้นหาตาม "ประเภทหักชำระ"
+        ->when($payment_type_id, function ($query) use ($payment_type_id) {
+            $query->whereHas('paymentTypes', function ($qq) use ($payment_type_id) {
+                $qq->where('id', $payment_type_id);
+            });
+        })
 
+        // ใหม่: ค้นหาตาม "สถานะยอดค้างชำระ"
+        // สมมติว่า paymentTypes.status = 'completed' เมื่อจ่ายครบ, อื่นๆ แปลว่ายังค้าง
+        ->when($payment_status === 'pending', function ($query) {
+            $query->whereHas('paymentTypes', function ($qq) {
+                $qq->where('status', '!=', 'completed');
+            });
+        })
+        ->when($payment_status === 'completed', function ($query) {
+            $query->whereDoesntHave('paymentTypes', function ($qq) {
+                $qq->where('status', '!=', 'completed');
+            });
+        })
 
-        // DB::enableQueryLog();
-        // $labours->get();
-        // dd(DB::getQueryLog());
+        ->with(['company','agency','paymentTypes']) // เผื่อใช้แสดงผล
+        ->paginate($perPage);
 
-  
+    // ดึงรายการประเภทหักชำระมาใส่ใน select (แก้โมเดล/คอลัมน์ให้ตรงของจริง)
+    $paymentTypeOptions = LabourPaymentType::orderBy('payment_name')
+        ->get(['payment_type_id','payment_name']);
 
-        //
-        // if ($request->ajax()) {
-            
-        //     return datatables::of($labour)
-        //         ->addIndexColumn()
-        //         ->addcolumn('action', function ($row) {
-        //             if (Auth::user()->type == 'MasterAdmin') {
-        //                 $btn =
-        //                     '<a href="' .
-        //                     route('labour.show', $row->labour_id) .
-        //                     '" class="btn btn-info btn-sm">ดูข้อมูล</a>
-        //         <a href="' .
-        //                     route('labour.edit', $row->labour_id) .
-        //                     '" class="btn btn-success btn-sm text-white">แก้ไข</a>
-        //         <a href="' .
-        //                     route('labour.delete', $row->labour_id) .
-        //                     '"  onclick="return confirm(`คุณต้องการลบข้อมูล ' .
-        //                     $row->labour_fullname . 
-        //                     ' ใช่ไหม ?`)" class="btn btn-danger btn-sm">ลบ</a>
-        //         ';
-        //                 return $btn;
-        //             } elseif (Auth::user()->type == 'Admin') {
-        //                 $btn =
-        //                     '<a href="' .
-        //                     route('labour.show', $row->labour_id) .
-        //                     '" class="btn btn-info btn-sm">ดูข้อมูล</a>
-        //         <a href="' .
-        //                     route('labour.edit', $row->labour_id) .
-        //                     '" class="btn btn-success btn-sm text-white">แก้ไข</a>
-        //         ';
-        //                 return $btn;
-        //             } else {
-        //                 $btn =
-        //                     '<a href="' .
-        //                     route('labour.show', $row->labour_id) .
-        //                     '" class="btn btn-info btn-sm">ดูข้อมูล</a>
-        //         ';
-        //                 return $btn;
-        //             }
-        //         })
+    $companys = CompanyModel::latest()->get();
 
-        //         ->addcolumn('checkbox', function ($row) {
-        //            return '<input type="checkbox" name="labour_ids[]" value="'.$row->labour_id.'">';
-        //         })
-        //         ->addcolumn('status', function ($row) {
-        //             if ($row->labour_status == 'enable') {
-        //                 $status = '<label class="badge rounded-pill bg-success text-white">Enable</label>';
-        //                 return $status;
-        //             } else {
-        //                 $status = '<label class="badge rounded-pill bg-danger text-white">Disable</label>';
-        //                 return $status;
-        //             }
-        //         })
-        //         ->rawColumns(['action', 'status','checkbox'])
-        //         ->make(true);
-        // }
-
-        $companys = CompanyModel::latest()->get();
-
-        return view('labour.index',compact('companys','labours','request'));
-    }
+    return view('labour.index', compact('companys','labours','request','paymentTypeOptions'));
+}
 
     /**
      * Show the form for creating a new resource.

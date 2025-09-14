@@ -63,6 +63,8 @@ Route::get('agency/delete/{agencyModel}',[\App\Http\Controllers\agency\AgencyCon
 // Labour Model
 Route::get('labour',[\App\Http\Controllers\labour\LabourController::class,'index'])->name('labour.index');
 Route::get('labour/form-add',[\App\Http\Controllers\labour\LabourController::class,'create'])->name('labour.create');
+// QR Code worker detail
+Route::get('labour/{labour}/qrcode-detail', [\App\Http\Controllers\labour\LabourController::class, 'qrcodeDetail'])->name('labour.qrcodeDetail');
 Route::post('labour/store',[\App\Http\Controllers\labour\LabourController::class,'store'])->name('labour.store');
 Route::get('labour/form-edit/{labourModel}',[\App\Http\Controllers\labour\LabourController::class,'edit'])->name('labour.edit');
 Route::get('labour/form-show/{labourModel}',[\App\Http\Controllers\labour\LabourController::class,'show'])->name('labour.show');
@@ -108,3 +110,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/action-logs', [App\Http\Controllers\ActionLogController::class, 'index'])
         ->name('action-logs.index');
 });
+
+Route::get('labour/{labour}/qrcode-detail', [\App\Http\Controllers\labour\LabourController::class, 'qrcodeDetail'])->name('labour.qrcodeDetail');
+
+// Labour Payment 
+Route::get('labour/{labour}/payment-edit', [\App\Http\Controllers\labour\LabourPaymentController::class, 'edit'])->name('labour.paymentEdit');
