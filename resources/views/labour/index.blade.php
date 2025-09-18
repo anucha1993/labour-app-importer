@@ -112,6 +112,20 @@
 </div>
 
                     
+                    <!-- QR Code Scanner Section -->
+                    <div class="col-md-3 mb-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="useQrScanner" name="use_qr_scanner">
+                            <label class="form-check-label" for="useQrScanner">
+                                ค้นหาด้วย QR Code/เลขที่หนังสือเดินทาง
+                            </label>
+                        </div>
+                        <input type="text" class="form-control" id="qrScannerInput" name="qr_code" 
+                               placeholder="สแกน QR Code หรือป้อนเลขหนังสือเดินทาง..." 
+                               style="display: none;"
+                               value="{{ $request->qr_code }}">
+                    </div>
+
                     <div class="col-md-2 mb-2 float-end">
                         <label for="">Search :</label>
                          <input type="text" class="form-control" name="keyword" placeholder="ค้นหาข้อมูล" value="{{ $request->keyword }}">
@@ -180,10 +194,20 @@
 
 
 
+    <!-- Print QR Codes Button -->
+    <div class="mb-3">
+        <button id="printSelectedQRCodes" class="btn btn-primary" disabled>
+            พิมพ์ QR Code ที่เลือก
+        </button>
+        <span id="selectedCount" class="ms-2">(0 รายการที่เลือก)</span>
+    </div>
+
     <table class="table labour table-striped table-bordered" id="labour">
         <thead>
             <tr>
-                <th>เลือก</th>
+                <th>
+                    <input type="checkbox" id="selectAll">
+                </th>
                 <th>ลำดับ</th>
                 <th>ชื่อ-สกุล</th>
                 <th>เลขที่หนังสือเดินทาง</th>
@@ -227,7 +251,7 @@
                     </td>
                         <td>
                             {{-- QR Code ปุ่ม --}}
-                            <a href="{{ route('labour.qrcodeDetail', $item->labour_id) }}" target="_blank">
+                            <a href="{{ route('labour.qrcodeDetail', $item->labour_id) }}" class="qr-code-link">
                                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&data={{ urlencode(route('labour.qrcodeDetail', $item->labour_id)) }}" alt="QR" width="60" height="60" />
                             </a>
                         </td>
@@ -285,80 +309,321 @@
 
     </form>
 
+    <!-- Modal แสดงข้อมูล QR Code -->
+    <div class="modal fade" id="qrCodeDetailModal" tabindex="-1" aria-labelledby="qrCodeDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content" style="height: 90vh;">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="qrCodeDetailModalLabel">
+                        <i class="fas fa-user me-2"></i>ข้อมูลแรงงาน
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-3" style="height: calc(90vh - 130px); overflow-y: auto;">
+                    <div id="qrCodeDetailContent" class="position-relative h-100">
+                        <!-- Content will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>ปิด
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // ฟังก์ชันสำหรับ initialize accordion ใน modal
+        function initializeAccordions() {
+            $('.accordion-button').off('click').on('click', function() {
+                $(this).toggleClass('collapsed');
+                const target = $(this).attr('data-bs-target');
+                $(target).toggleClass('show');
+            });
+        }
+
         $(document).ready(function() {
+            console.log('Document ready - Starting initialization');
             $('.select2').select2();
-            // Popover สำหรับยอดค้างชำระ
-            $('[data-bs-toggle="popover"]').popover();
-            //  $('#labour').DataTable();
 
-            // $('#labour').DataTable({
-            //     processing: true,
-            //     serverSide: true,
-            //     ajax: "{{ route('labour.index') }}",
-            //     columns: [{
-            //             data: 'checkbox',
-            //             name: 'checkbox'
-            //         },
-            //         {
-            //             data: 'DT_RowIndex',
-            //             name: 'DT_RowIndex'
-            //         },
-            //         {
-            //             data: 'labour_fullname',
-            //             name: 'labour_fullname'
-            //         },
-            //         {
-            //             data: 'labour_passport_number',
-            //             name: 'labour_passport_number'
-            //         },
-            //         {
-            //             data: 'labour_visa_number',
-            //             name: 'labour_visa_number'
-            //         },
-            //         {
-            //             data: 'company_name',
-            //             name: 'company_name'
-            //         },
-            //         {
-            //             data: 'agency_name',
-            //             name: 'agency_name'
-            //         },
-            //         {
-            //             data: 'status',
-            //             name: 'status'
-            //         },
+            // Initialize Modal globally - สร้างครั้งเดียวเท่านั้น
+            let qrModal = null;
+            const modalElement = document.getElementById('qrCodeDetailModal');
+            if (modalElement) {
+                qrModal = new bootstrap.Modal(modalElement, {
+                    backdrop: true,
+                    keyboard: true,
+                    focus: true
+                });
+                console.log('Global modal initialized');
+                
+                // เพิ่ม event listener สำหรับการปิด modal
+                modalElement.addEventListener('hidden.bs.modal', function() {
+                    console.log('Modal hidden');
+                    $('#qrCodeDetailContent').html('');
+                });
+            }
 
-            //         {
-            //             data: 'action',
-            //             name: 'action'
-            //         },
-            //     ],
-            //     // initComplete: function() {
-            //     //     this.api().columns().every(function() {
-            //     //         var column = this;
-            //     //         var title = $(column.header()).text();
-            //     //         if (title !== '') {
-            //     //             $('<input type="text" placeholder="Search ' + title + '" />')
-            //     //                 .appendTo($(column.header()).append(
-            //     //                 '<br>')) // เพิ่มช่องค้นหาใต้ header เดิม
-            //     //                 .on('keyup change clear', function() {
-            //     //                     // ...
-            //     //                 });
-            //     //         }
-            //     //     });
-            //     // }
-            // });
-
-
-            // Hide And Show
-            $('#show-massupdate').change(function() {
-                if (this.checked) {
-                    $('#div-massupdate').show();
+            // QR Scanner Toggle
+            $('#useQrScanner').off('change').on('change', function() {
+                const isChecked = $(this).is(':checked');
+                console.log('QR Scanner checkbox changed:', isChecked);
+                
+                const qrInput = $('#qrScannerInput');
+                qrInput.toggle(isChecked);
+                
+                if (isChecked) {
+                    // Focus ทันทีและใช้ setTimeout เพื่อให้แน่ใจว่า focus ได้
+                    setTimeout(function() {
+                        qrInput.focus();
+                        qrInput.select(); // เลือกข้อความทั้งหมดถ้ามี
+                        console.log('QR Scanner input focused');
+                    }, 100);
                 } else {
-                    $('#div-massupdate').hide();
+                    qrInput.val('').blur();
+                    console.log('QR Scanner input cleared and blurred');
                 }
             });
+
+            // เมื่อคลิกที่ input ให้ focus อีกครั้ง
+            $('#qrScannerInput').off('click').on('click', function() {
+                $(this).focus();
+            });
+
+            // เมื่อ input สูญเสีย focus แล้วยังติ๊กอยู่ ให้ focus กลับมา
+            $('#qrScannerInput').off('blur').on('blur', function() {
+                const $this = $(this);
+                if ($('#useQrScanner').is(':checked')) {
+                    setTimeout(function() {
+                        if (!$this.is(':focus') && $('#useQrScanner').is(':checked')) {
+                            $this.focus();
+                            console.log('Re-focused QR Scanner input');
+                        }
+                    }, 100);
+                }
+            });
+
+            // QR Scanner Input Handler - ใช้ debounce เพื่อป้องกันการเรียกซ้ำ
+            let inputTimer;
+            $('#qrScannerInput').off('input').on('input', function() {
+                const $this = $(this);
+                const input = $this.val().trim();
+                
+                clearTimeout(inputTimer);
+                
+                if (!input || !$('#useQrScanner').is(':checked')) {
+                    return;
+                }
+
+                inputTimer = setTimeout(function() {
+                    console.log('Processing input:', input);
+                    
+                    if (!input.startsWith('http')) {
+                        // ค้นหาด้วยเลขพาสปอร์ต
+                        searchByPassport(input);
+                    } else {
+                        // ค้นหาด้วย URL
+                        loadQrCodeData(input);
+                    }
+                    
+                    $this.val(''); // ล้างค่าหลังประมวลผล
+                }, 300);
+            });
+
+            // Click Handler สำหรับ QR Code Images
+            $(document).off('click', '.qr-code-link').on('click', '.qr-code-link', function(e) {
+                e.preventDefault();
+                const url = $(this).attr('href');
+                console.log('QR Code clicked:', url);
+                loadQrCodeData(url);
+            });
+
+            // ฟังก์ชันค้นหาด้วยเลขพาสปอร์ต
+            function searchByPassport(passportNumber) {
+                console.log('Searching by passport:', passportNumber);
+                
+                // ค้นหาในตารางปัจจุบันก่อน
+                let found = false;
+                $('table#labour tbody tr').each(function() {
+                    const rowPassport = $(this).find('td:nth-child(4)').text().trim();
+                    if (rowPassport === passportNumber) {
+                        found = true;
+                        const qrUrl = $(this).find('.qr-code-link').attr('href');
+                        if (qrUrl) {
+                            console.log('Found in table, loading:', qrUrl);
+                            loadQrCodeData(qrUrl);
+                        }
+                        return false; // break loop
+                    }
+                });
+                
+                if (!found) {
+                    // ค้นหาผ่าน API
+                    console.log('Not found in table, trying API');
+                    $.ajax({
+                        url: `/labour/passport/${passportNumber}`,
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        success: function(response) {
+                            if (response.success && response.url) {
+                                loadQrCodeData(response.url);
+                            } else {
+                                alert('ไม่พบข้อมูลเลขที่หนังสือเดินทาง');
+                            }
+                        },
+                        error: function(xhr) {
+                            console.error('API Error:', xhr);
+                            alert('ไม่พบข้อมูลเลขที่หนังสือเดินทาง');
+                        }
+                    });
+                }
+            }
+
+            // ฟังก์ชันโหลดข้อมูล QR Code
+            function loadQrCodeData(url) {
+                console.log('Loading QR data from:', url);
+                
+                const modalContent = $('#qrCodeDetailContent');
+                
+                if (!qrModal) {
+                    console.error('Modal not initialized');
+                    return;
+                }
+
+                $.ajax({
+                    url: url,
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    beforeSend: function() {
+                        console.log('AJAX request starting...');
+                        modalContent.html(`
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div class="mt-3">กำลังโหลดข้อมูล...</div>
+                            </div>
+                        `);
+                        
+                        // แสดง Modal ด้วย instance ที่สร้างไว้แล้ว
+                        qrModal.show();
+                    },
+                    success: function(response) {
+                        console.log('AJAX Success - Response received');
+                        modalContent.html(response);
+                        
+                        // Initialize Bootstrap components
+                        setTimeout(function() {
+                            initializeAccordions();
+                            
+                            // Initialize other Bootstrap components
+                            modalContent.find('[data-bs-toggle="popover"]').each(function() {
+                                new bootstrap.Popover(this);
+                            });
+                            
+                            modalContent.find('[data-bs-toggle="tooltip"]').each(function() {
+                                new bootstrap.Tooltip(this);
+                            });
+                            
+                            console.log('Modal content loaded and initialized');
+                        }, 100);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX Error:', {
+                            status: status,
+                            error: error,
+                            response: xhr.responseText
+                        });
+                        modalContent.html(`
+                            <div class="alert alert-danger">
+                                <h5>เกิดข้อผิดพลาดในการโหลดข้อมูล</h5>
+                                <p>Error: ${error}</p>
+                                <p>Status: ${status}</p>
+                            </div>
+                        `);
+                    }
+                });
+            }
+
+            // Handle Select All checkbox
+            $('#selectAll').change(function() {
+                $('input[name="labour_ids[]"]').prop('checked', this.checked);
+                updateSelectedCount();
+            });
+
+            // Handle individual checkboxes
+            $(document).on('change', 'input[name="labour_ids[]"]', function() {
+                updateSelectedCount();
+            });
+
+            // Update selected count and button state
+            function updateSelectedCount() {
+                let selectedCount = $('input[name="labour_ids[]"]:checked').length;
+                $('#selectedCount').text(`(${selectedCount} รายการที่เลือก)`);
+                $('#printSelectedQRCodes').prop('disabled', selectedCount === 0);
+            }
+
+            // Handle Print QR Codes button
+            $('#printSelectedQRCodes').click(function() {
+                let selectedIds = [];
+                $('input[name="labour_ids[]"]:checked').each(function() {
+                    selectedIds.push($(this).val());
+                });
+
+                if (selectedIds.length > 0) {
+                    let printFrame = $('<iframe>', {
+                        name: 'printQRCodes',
+                        class: 'printFrame'
+                    }).css('display', 'none').appendTo('body');
+
+                    let printContent = '<html><head><style>' +
+                        '.qr-container { display: inline-block; text-align: center; margin: 10px; padding: 10px; border: 1px solid #ddd; }' +
+                        '.qr-container img { margin-bottom: 5px; }' +
+                        '.qr-info { font-size: 14px; }' +
+                        '@media print { body { margin: 0; } .qr-container { page-break-inside: avoid; } }' +
+                        '</style></head><body>';
+
+                    $('input[name="labour_ids[]"]:checked').each(function() {
+                        let row = $(this).closest('tr');
+                        let qrUrl = row.find('.qr-code-link').attr('href');
+                        let passportNumber = row.find('td:nth-child(4)').text();
+                        
+                        printContent += '<div class="qr-container">' +
+                            '<img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(qrUrl) + '" />' +
+                            '<div class="qr-info">Passport: ' + passportNumber + '</div>' +
+                            '</div>';
+                    });
+
+                    printContent += '</body></html>';
+
+                    let frameDoc = printFrame[0].contentWindow.document;
+                    frameDoc.open();
+                    frameDoc.write(printContent);
+                    frameDoc.close();
+
+                    setTimeout(function() {
+                        printFrame[0].contentWindow.print();
+                        setTimeout(function() {
+                            printFrame.remove();
+                        }, 1000);
+                    }, 500);
+                }
+            });
+
+            // Initialize popovers
+            $('[data-bs-toggle="popover"]').popover();
+
+            // Hide And Show Mass Update
+            $('#show-massupdate').change(function() {
+                $('#div-massupdate').toggle(this.checked);
+            });
+            
+            console.log('Initialization complete');
         });
     </script>
 @endsection

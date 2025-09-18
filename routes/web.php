@@ -44,6 +44,9 @@ Route::post('/province', [App\Http\Controllers\company\CompanyController::class,
 Route::post('/amphur', [App\Http\Controllers\company\CompanyController::class, 'amphur'])->name('amphur');
 Route::post('/district', [App\Http\Controllers\company\CompanyController::class, 'district'])->name('district');
 
+//Labour Search Routes
+Route::get('/labour/passport/{passportNumber}', [App\Http\Controllers\labour\LabourController::class, 'findByPassport'])->name('labour.findByPassport');
+
 //Payment Routes
 Route::post('/labour/payment-type', [LabourPaymentController::class, 'storePaymentType']);
 Route::post('/labour/payment-type/{paymentType}', [LabourPaymentController::class, 'updatePaymentType']);

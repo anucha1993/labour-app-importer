@@ -2,78 +2,79 @@
 <style>
     body, html { background: #f2f4f8; }
     .qr-mobile-container {
-        width: 100vw;
-        min-height: 100vh;
+        width: 100%;
+        min-height: auto;
         margin: 0;
-        padding: 0.5rem 0.5rem 2rem 0.5rem;
+        padding: 0.5rem;
         background: #fff;
         border-radius: 0;
-        box-shadow: 0 2px 16px rgba(80,120,200,0.07);
-        font-size: 1.13rem;
+        box-shadow: none;
+        font-size: 0.9rem;
     }
     .qr-mobile-header {
         text-align: center;
-        margin-bottom: 0.8rem;
+        margin-bottom: 0.5rem;
     }
     .qr-mobile-header h3 {
-        font-size: 1.22rem;
-        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+        margin-bottom: 0.3rem;
         color: #2a3b6e;
         letter-spacing: 0.5px;
     }
     .qr-mobile-info {
         background: linear-gradient(90deg, #e3eafc 0%, #f8f9fa 100%);
-        border-radius: 10px;
-        padding: 0.7rem 1rem;
-        margin-bottom: 1.1rem;
-        font-size: 1.09rem;
+        border-radius: 8px;
+        padding: 0.5rem 0.8rem;
+        margin-bottom: 0.8rem;
+        font-size: 0.9rem;
         box-shadow: 0 1px 4px rgba(80,120,200,0.04);
     }
     .qr-mobile-info strong {
-        min-width: 90px;
+        min-width: 80px;
         display: inline-block;
         color: #2a3b6e;
+        font-size: 0.85rem;
     }
     .qr-mobile-section-title {
-        font-size: 1.09rem;
+        font-size: 1rem;
         font-weight: 600;
-        margin: 1.1rem 0 0.5rem 0;
+        margin: 0.8rem 0 0.4rem 0;
         color: #1a237e;
         letter-spacing: 0.2px;
     }
     .qr-mobile-list-group {
         padding-left: 0;
-        margin-bottom: 1rem;
+        margin-bottom: 0.8rem;
     }
     .qr-mobile-list-group li {
         list-style: none;
         background: #f6faff;
-        margin-bottom: 0.4rem;
+        margin-bottom: 0.3rem;
         border-radius: 6px;
-        padding: 0.6rem 0.7rem;
+        padding: 0.4rem 0.5rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 1rem;
+        font-size: 0.85rem;
         border: 1px solid #e3eafc;
     }
     .qr-mobile-badge {
-        font-size: 1rem;
-        padding: 0.32em 0.7em;
+        font-size: 0.8rem;
+        padding: 0.25em 0.5em;
         border-radius: 1em;
     }
     .qr-mobile-table {
-        width: 100vw;
-        min-width: 340px;
-        font-size: 1.01rem;
+        width: 100%;
+        min-width: auto;
+        font-size: 0.8rem;
         border-collapse: collapse;
-        margin-bottom: 1.2rem;
+        margin-bottom: 0.8rem;
         background: #fff;
         box-shadow: 0 1px 4px rgba(80,120,200,0.04);
     }
     .qr-mobile-table th, .qr-mobile-table td {
         border: 1px solid #e0e0e0;
-        padding: 0.45em 0.2em;
+        padding: 0.3em 0.2em;
         text-align: center;
         word-break: break-word;
     }
@@ -81,11 +82,12 @@
         background: #e3eafc;
         color: #1a237e;
         font-weight: 600;
+        font-size: 0.75rem;
     }
     .accordion {
-        border-radius: 8px;
+        border-radius: 6px;
         overflow: hidden;
-        margin-bottom: 1.2rem;
+        margin-bottom: 0.8rem;
         background: #f6faff;
         border: 1px solid #e3eafc;
         box-shadow: 0 1px 4px rgba(80,120,200,0.04);
@@ -93,12 +95,12 @@
     .accordion-header {
         color: #1a237e;
         font-weight: 600;
-        padding: 0.8rem 1rem;
+        padding: 0.5rem 0.8rem;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        font-size: 1.05rem;
+        font-size: 0.9rem;
         border-bottom: 1px solid #dbe6fd;
         transition: background 0.2s;
     }
@@ -113,9 +115,34 @@
     }
     .accordion-content {
         display: none;
-        padding: 0.7rem 1rem 0.7rem 1rem;
+        padding: 0.5rem 0.8rem;
         background: #fff;
         animation: fadeIn 0.2s;
+    }
+    
+    /* Compact layout for modal */
+    @media (max-width: 1400px) {
+        .qr-mobile-container {
+            padding: 0.3rem;
+        }
+        .qr-mobile-info {
+            padding: 0.4rem 0.6rem;
+            margin-bottom: 0.6rem;
+        }
+        .qr-mobile-table {
+            font-size: 0.75rem;
+        }
+        .qr-mobile-table th, .qr-mobile-table td {
+            padding: 0.25em 0.15em;
+        }
+        .accordion-header {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.85rem;
+        }
+        .accordion-content {
+            padding: 0.4rem 0.6rem;
+        }
+    }
     }
     .accordion.active .accordion-content {
         display: block;
@@ -213,7 +240,7 @@
                         @endif
                         <div style="padding:0.3rem 1rem 0.7rem 1rem; font-size:0.97em; color:#555; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5em;">
                             <span>ยอดคงเหลือ: <b>{{ number_format($type->total_amount - $type->calculatePaidAmount(),2) }}</b> บาท</span>
-                            <a href="{{ route('labour.edit', $labour->labour_id) }}" class="btn btn-primary btn-sm" style="background:#1976d2; border:none; border-radius:20px; padding:0.4em 1.2em; font-size:0.98em; color:#fff;">ชำระเงิน</a>
+                            <a href="{{ route('labour.paymentEdit', $labour->labour_id) }}" class="btn btn-primary btn-sm" style="background:#1976d2; border:none; border-radius:20px; padding:0.4em 1.2em; font-size:0.98em; color:#fff;">ชำระเงิน</a>
                         </div>
                     </div>
                 </div>

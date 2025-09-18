@@ -23,15 +23,55 @@ class LabourController extends Controller
         /**
      * Show QR code detail page for a worker
      */
-    public function qrcodeDetail($labourId)
+    public function qrcodeDetail($identifier)
     {
+        // ตรวจสอบว่า $identifier เป็น ID หรือเลขที่หนังสือเดินทาง
         $labour = LabourModel::with(['company', 'agency', 'paymentTypes.histories'])
-            ->findOrFail($labourId);
+            ->where(function($query) use ($identifier) {
+                $query->where('labour_id', $identifier)
+                      ->orWhere('labour_passport_number', $identifier);
+            })
+            ->firstOrFail();
 
         // คำนวณยอดค้างชำระแต่ละ payment type
         $pendingTypes = $labour->paymentTypes->where('status', '!=', 'completed');
 
+        // ถ้าเป็น AJAX request ให้ส่งเฉพาะ HTML content
+        if(request()->ajax()) {
+            return view('labour.qrcode-detail', compact('labour', 'pendingTypes'))->render();
+        }
+
+        // ถ้าเป็น regular request ให้ส่งหน้าเต็ม
         return view('labour.qrcode-detail', compact('labour', 'pendingTypes'));
+    }
+
+    /**
+     * API endpoint for searching by passport number
+     */
+    public function findByPassport($passportNumber)
+    {
+        try {
+            $labour = LabourModel::where('labour_passport_number', $passportNumber)
+                ->with(['company', 'agency', 'paymentTypes.histories'])
+                ->firstOrFail();
+            
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'url' => route('labour.qrcodeDetail', $labour->labour_id)
+                ]);
+            }
+            
+            return redirect()->route('labour.qrcodeDetail', $labour->labour_id);
+        } catch (\Exception $e) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่พบข้อมูลเลขที่หนังสือเดินทาง'
+                ], 404);
+            }
+            return back()->with('error', 'ไม่พบข้อมูลเลขที่หนังสือเดินทาง');
+        }
     }
 
     /**
