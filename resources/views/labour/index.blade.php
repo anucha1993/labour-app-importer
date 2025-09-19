@@ -252,7 +252,7 @@
                         <td>
                             {{-- QR Code ปุ่ม --}}
                             <a href="{{ route('labour.qrcodeDetail', $item->labour_id) }}" class="qr-code-link">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&data={{ urlencode(route('labour.qrcodeDetail', $item->labour_id)) }}" alt="QR" width="60" height="60" />
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&data={{ urlencode($item->labour_passport_number)}}" alt="QR" width="60" height="60" />
                             </a>
                         </td>
                         <td>
@@ -579,6 +579,14 @@
                 $(this).focus();
             });
 
+                // ป้องกันการ submit ฟอร์มเมื่อกด Enter ในช่อง qrScannerInput
+                $('#qrScannerInput').on('keydown', function(e) {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+
             // เมื่อ input สูญเสีย focus แล้วยังติ๊กอยู่ ให้ focus กลับมา
             $('#qrScannerInput').off('blur').on('blur', function() {
                 const $this = $(this);
@@ -850,24 +858,21 @@
                     }).css('display', 'none').appendTo('body');
 
                     let printContent = '<html><head><style>' +
-                        '.qr-container { display: inline-block; text-align: center; margin: 10px; padding: 10px; border: 1px solid #ddd; }' +
-                        '.qr-container img { margin-bottom: 5px; }' +
-                        '.qr-info { font-size: 14px; }' +
-                        '@media print { body { margin: 0; } .qr-container { page-break-inside: avoid; } }' +
-                        '</style></head><body>';
-
+                        'table.qr-table { border-collapse: collapse; }' +
+                        'table.qr-table td { border: 1.5px dashed #333; width: 180px; height: 220px; padding: 10px; text-align: center; vertical-align: middle; }' +
+                        '.qr-info { font-size: 15px; font-weight: bold; margin-top: 4px; text-align: center; }' +
+                        '@media print { body { margin: 0; } td { page-break-inside: avoid; } }' +
+                        '</style></head><body><table class="qr-table"><tr>';
+                    let colCount = 0;
                     $('input[name="labour_ids[]"]:checked').each(function() {
                         let row = $(this).closest('tr');
                         let qrUrl = row.find('.qr-code-link').attr('href');
                         let passportNumber = row.find('td:nth-child(4)').text();
-                        
-                        printContent += '<div class="qr-container">' +
-                            '<img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(qrUrl) + '" />' +
-                            '<div class="qr-info">Passport: ' + passportNumber + '</div>' +
-                            '</div>';
+                        printContent += '<td><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(qrUrl) + '" /><div class="qr-info">Passport: ' + passportNumber + '</div></td>';
+                        colCount++;
+                        if (colCount % 2 === 0) printContent += '</tr><tr>';
                     });
-
-                    printContent += '</body></html>';
+                    printContent += '</tr></table></body></html>';
 
                     let frameDoc = printFrame[0].contentWindow.document;
                     frameDoc.open();
