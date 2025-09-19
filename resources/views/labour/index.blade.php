@@ -153,7 +153,7 @@
 
 
 
-    <input type="checkbox" id="show-massupdate"> <label for="">Mass Update</label>
+    {{-- <input type="checkbox" id="show-massupdate"> <label for="">Mass Update</label> --}}
 
     <div id="div-massupdate" style="display: none">
         {{-- <h3>Mass Update</h3> --}}
@@ -261,17 +261,27 @@
                             @endphp
                             @if($pendingTypes->count() > 0)
                                 <button type="button" 
-                                        class="btn btn-warning btn-sm" 
+                                        class="btn btn-warning btn-sm payment-pending-btn" 
+                                        data-labour-id="{{ $item->labour_id }}"
                                         data-bs-toggle="popover"
                                         data-bs-html="true"
-                                        title="รายการค้างชำระ"
+                                        title="รายการค้างชำระ - คลิกเพื่อดูรายละเอียด"
                                         data-bs-content="@foreach($pendingTypes as $type)
-                                            <div>
-                                                {{ $type->payment_name }}: 
-                                                {{ number_format($type->total_amount - $type->calculatePaidAmount(), 2) }} บาท
-                                                ({{ $type->status }})
+                                            <div class='payment-item' style='cursor: pointer; padding: 5px; border-radius: 4px; margin: 2px 0;' 
+                                                 onclick='loadPaymentDetail({{ $item->labour_id }}, {{ $type->id }})' 
+                                                 onmouseover='this.style.backgroundColor=&quot;#f0f0f0&quot;' 
+                                                 onmouseout='this.style.backgroundColor=&quot;transparent&quot;'>
+                                                <strong>{{ $type->payment_name }}</strong><br>
+                                                <small>ยอดค้าง: {{ number_format($type->total_amount - $type->calculatePaidAmount(), 2) }} บาท ({{ $type->status }})</small>
+                                                <br><small style='color: #666;'>👆 คลิกเพื่อดูรายละเอียด</small>
                                             </div>
-                                        @endforeach">
+                                        @endforeach
+                                        <hr style='margin: 8px 0;'>
+                                        <div style='text-align: center;'>
+                                            <button class='btn btn-primary btn-sm' onclick='loadQrCodeData(&quot;{{ route('labour.qrcodeDetail', $item->labour_id) }}&quot;)'>
+                                                ดูประวัติทั้งหมด
+                                            </button>
+                                        </div>">
                                     {{ $pendingTypes->count() }} รายการ
                                 </button>
                             @else
@@ -310,14 +320,14 @@
     </form>
 
     <!-- Modal แสดงข้อมูล QR Code -->
-    <div class="modal fade" id="qrCodeDetailModal" tabindex="-1" aria-labelledby="qrCodeDetailModalLabel" aria-hidden="true">
+    <div class="modal fade" id="qrCodeDetailModal" tabindex="-1" aria-labelledby="qrCodeDetailModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content" style="height: 90vh;">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="qrCodeDetailModalLabel">
                         <i class="fas fa-user me-2"></i>ข้อมูลแรงงาน
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="closeModal()"></button>
                 </div>
                 <div class="modal-body p-3" style="height: calc(90vh - 130px); overflow-y: auto;">
                     <div id="qrCodeDetailContent" class="position-relative h-100">
@@ -325,7 +335,7 @@
                     </div>
                 </div>
                 <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btnCloseModal" onclick="closeModal()">
                         <i class="fas fa-times me-1"></i>ปิด
                     </button>
                 </div>
@@ -333,37 +343,215 @@
         </div>
     </div>
 
+     <script>
+    // ฟังก์ชันปิด modal แบบแน่นอน
+    function closeModal() {
+        console.log('closeModal() function called');
+        
+        try {
+            const modalElement = document.getElementById('qrCodeDetailModal');
+            if (!modalElement) {
+                console.error('Modal element not found');
+                return;
+            }
+            
+            // วิธีที่ 1: ใช้ Bootstrap Modal instance
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) {
+                console.log('Using existing modal instance');
+                modalInstance.hide();
+            } else {
+                console.log('Creating new modal instance');
+                const newModal = new bootstrap.Modal(modalElement);
+                newModal.hide();
+            }
+            
+            // วิธีที่ 2: Force close ด้วย jQuery (backup)
+            setTimeout(() => {
+                if (modalElement.classList.contains('show')) {
+                    console.log('Force closing modal with jQuery');
+                    $('#qrCodeDetailModal').modal('hide');
+                }
+            }, 100);
+            
+            // วิธีที่ 3: Manual close (last resort)
+            setTimeout(() => {
+                if (modalElement.classList.contains('show')) {
+                    console.log('Manual close - last resort');
+                    modalElement.classList.remove('show');
+                    modalElement.style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                    
+                    // ลบ backdrop
+                    const backdrop = document.querySelector('.modal-backdrop');
+                    if (backdrop) {
+                        backdrop.remove();
+                    }
+                    
+                    // Clear modal content
+                    $('#qrCodeDetailContent').html('');
+                }
+            }, 500);
+            
+        } catch (error) {
+            console.error('Error closing modal:', error);
+            
+            // Emergency close
+            const modalElement = document.getElementById('qrCodeDetailModal');
+            if (modalElement) {
+                modalElement.classList.remove('show');
+                modalElement.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                $('.modal-backdrop').remove();
+                $('#qrCodeDetailContent').html('');
+            }
+        }
+    }
+    
+    // Event listeners สำหรับการปิด modal
+    $(document).ready(function() {
+        // ปุ่มปิด
+        $(document).on('click', '#btnCloseModal', function(e) {
+            e.preventDefault();
+            console.log('Close button clicked via event listener');
+            closeModal();
+        });
+        
+        // ปุ่ม X
+        $(document).on('click', '.btn-close', function(e) {
+            e.preventDefault();
+            console.log('X button clicked via event listener');
+            closeModal();
+        });
+        
+        // ESC key
+        $(document).on('keydown', function(e) {
+            if ((e.key === 'Escape' || e.keyCode === 27)) {
+                const modal = document.getElementById('qrCodeDetailModal');
+                if (modal && modal.classList.contains('show')) {
+                    console.log('ESC key pressed');
+                    closeModal();
+                }
+            }
+        });
+        
+        // Backdrop click
+        $(document).on('click', '#qrCodeDetailModal', function(e) {
+            if (e.target === e.currentTarget) {
+                console.log('Backdrop clicked');
+                closeModal();
+            }
+        });
+    });
+    </script>
+
     <script>
         // ฟังก์ชันสำหรับ initialize accordion ใน modal
         function initializeAccordions() {
-            $('.accordion-button').off('click').on('click', function() {
-                $(this).toggleClass('collapsed');
-                const target = $(this).attr('data-bs-target');
-                $(target).toggleClass('show');
+            // ลบ event listeners เดิม
+            $('.accordion-header').off('click');
+            
+            // เพิ่ม event listeners ใหม่
+            $('.accordion-header').on('click', function() {
+                const accordionId = $(this).attr('onclick');
+                if (accordionId) {
+                    // Extract ID from onclick attribute
+                    const match = accordionId.match(/toggleAccordion\('(.+)'\)/);
+                    if (match) {
+                        const id = match[1];
+                        toggleAccordion(id);
+                    }
+                } else {
+                    // Fallback for Bootstrap accordion
+                    $(this).toggleClass('collapsed');
+                    const target = $(this).attr('data-bs-target');
+                    if (target) {
+                        $(target).toggleClass('show');
+                    }
+                }
             });
+            
+            console.log('Accordion event listeners attached:', $('.accordion-header').length);
+        }
+
+        // Global toggleAccordion function for modal content
+        function toggleAccordion(id) {
+            console.log('Toggling accordion:', id);
+            const acc = document.getElementById(id);
+            if (acc) {
+                console.log('Accordion found, current state:', acc.classList.contains('active') ? 'active' : 'inactive');
+                
+                if (acc.classList.contains('active')) {
+                    acc.classList.remove('active');
+                    console.log('Accordion closed:', id);
+                } else {
+                    // Close all accordions first
+                    const allAccordions = document.querySelectorAll('.accordion');
+                    console.log('Found accordions:', allAccordions.length);
+                    allAccordions.forEach(function(a) { 
+                        a.classList.remove('active'); 
+                    });
+                    // Open the clicked accordion
+                    acc.classList.add('active');
+                    console.log('Accordion opened:', id);
+                    
+                    // Force show content
+                    const content = acc.querySelector('.accordion-content');
+                    if (content) {
+                        content.style.display = 'block';
+                        console.log('Content forced to display');
+                    }
+                }
+            } else {
+                console.error('Accordion not found:', id);
+                // Try to find it with different selector
+                const allElements = document.querySelectorAll('[id*="acc-"]');
+                console.log('Available accordion IDs:', Array.from(allElements).map(el => el.id));
+            }
         }
 
         $(document).ready(function() {
             console.log('Document ready - Starting initialization');
             $('.select2').select2();
 
-            // Initialize Modal globally - สร้างครั้งเดียวเท่านั้น
-            let qrModal = null;
+            // ไม่ต้องสร้าง modal instance ล่วงหน้า - ใช้ built-in Bootstrap behavior
             const modalElement = document.getElementById('qrCodeDetailModal');
             if (modalElement) {
-                qrModal = new bootstrap.Modal(modalElement, {
-                    backdrop: true,
-                    keyboard: true,
-                    focus: true
-                });
-                console.log('Global modal initialized');
+                console.log('Modal element found');
                 
                 // เพิ่ม event listener สำหรับการปิด modal
                 modalElement.addEventListener('hidden.bs.modal', function() {
-                    console.log('Modal hidden');
+                    console.log('Modal hidden event triggered');
                     $('#qrCodeDetailContent').html('');
                 });
+                
+                // เพิ่ม event listener สำหรับการแสดง modal
+                modalElement.addEventListener('shown.bs.modal', function() {
+                    console.log('Modal shown event triggered');
+                });
+                
+                // เพิ่ม event listener สำหรับการซ่อน modal
+                modalElement.addEventListener('hide.bs.modal', function() {
+                    console.log('Modal hide event triggered');
+                });
             }
+            
+            // ฟังก์ชันทดสอบ modal - Version 2
+            window.testModalOpen = function() {
+                console.log('Testing modal open...');
+                const modalElement = document.getElementById('qrCodeDetailModal');
+                if (modalElement) {
+                    const modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                    $('#qrCodeDetailContent').html('<div class="p-4 text-center">ทดสอบเปิด Modal<br><button onclick="closeModal()" class="btn btn-danger mt-3">ปิด Modal</button></div>');
+                }
+            };
+            
+            // ฟังก์ชันทดสอบปิด modal
+            window.testModalClose = function() {
+                console.log('Testing modal close...');
+                closeModal();
+            };
 
             // QR Scanner Toggle
             $('#useQrScanner').off('change').on('change', function() {
@@ -487,9 +675,10 @@
                 console.log('Loading QR data from:', url);
                 
                 const modalContent = $('#qrCodeDetailContent');
+                const modalElement = document.getElementById('qrCodeDetailModal');
                 
-                if (!qrModal) {
-                    console.error('Modal not initialized');
+                if (!modalElement) {
+                    console.error('Modal element not found');
                     return;
                 }
 
@@ -510,8 +699,14 @@
                             </div>
                         `);
                         
-                        // แสดง Modal ด้วย instance ที่สร้างไว้แล้ว
-                        qrModal.show();
+                        // แสดง Modal ด้วย Bootstrap 5
+                        const modal = new bootstrap.Modal(modalElement, {
+                            backdrop: true,
+                            keyboard: true,
+                            focus: true
+                        });
+                        modal.show();
+                        console.log('Modal show() called');
                     },
                     success: function(response) {
                         console.log('AJAX Success - Response received');
@@ -519,6 +714,23 @@
                         
                         // Initialize Bootstrap components
                         setTimeout(function() {
+                            console.log('Initializing modal components...');
+                            
+                            // Check accordions
+                            const accordions = modalContent.find('.accordion');
+                            console.log('Found accordions in modal:', accordions.length);
+                            accordions.each(function(i) {
+                                console.log(`Accordion ${i}:`, this.id, this.className);
+                            });
+                            
+                            // Check accordion headers
+                            const headers = modalContent.find('.accordion-header');
+                            console.log('Found accordion headers:', headers.length);
+                            headers.each(function(i) {
+                                const onclick = $(this).attr('onclick');
+                                console.log(`Header ${i} onclick:`, onclick);
+                            });
+                            
                             initializeAccordions();
                             
                             // Initialize other Bootstrap components
@@ -549,6 +761,62 @@
                     }
                 });
             }
+            
+            // ฟังก์ชันสำหรับโหลดรายละเอียด payment type เฉพาะ
+            function loadPaymentDetail(labourId, paymentTypeId) {
+                console.log('Loading payment detail for labour:', labourId, 'payment type:', paymentTypeId);
+                
+                // ปิด popover ก่อน
+                $('.payment-pending-btn').popover('hide');
+                
+                // สร้าง URL สำหรับดูรายละเอียด payment type เฉพาะ
+                const url = `/labour/${labourId}/payment-detail/${paymentTypeId}`;
+                
+                const modalContent = $('#qrCodeDetailContent');
+                
+                if (!qrModal) {
+                    console.error('Modal not initialized');
+                    return;
+                }
+
+                $.ajax({
+                    url: url,
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    beforeSend: function() {
+                        console.log('Loading payment detail...');
+                        modalContent.html(`
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div class="mt-3">กำลังโหลดรายละเอียดการชำระเงิน...</div>
+                            </div>
+                        `);
+                        
+                        qrModal.show();
+                    },
+                    success: function(response) {
+                        console.log('Payment detail loaded successfully');
+                        modalContent.html(response);
+                        
+                        setTimeout(function() {
+                            initializeAccordions();
+                            console.log('Payment detail modal initialized');
+                        }, 100);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error loading payment detail:', error);
+                        // Fallback: โหลด QR detail ปกติแทน
+                        loadQrCodeData(`/labour/${labourId}/qrcode-detail`);
+                    }
+                });
+            }
+            
+            // เพิ่มให้เป็น global function
+            window.loadPaymentDetail = loadPaymentDetail;
 
             // Handle Select All checkbox
             $('#selectAll').change(function() {

@@ -68,6 +68,7 @@ Route::get('labour',[\App\Http\Controllers\labour\LabourController::class,'index
 Route::get('labour/form-add',[\App\Http\Controllers\labour\LabourController::class,'create'])->name('labour.create');
 // QR Code worker detail
 Route::get('labour/{labour}/qrcode-detail', [\App\Http\Controllers\labour\LabourController::class, 'qrcodeDetail'])->name('labour.qrcodeDetail');
+Route::get('labour/{labour}/payment-detail/{paymentType}', [\App\Http\Controllers\labour\LabourController::class, 'paymentDetail'])->name('labour.paymentDetail');
 Route::post('labour/store',[\App\Http\Controllers\labour\LabourController::class,'store'])->name('labour.store');
 Route::get('labour/form-edit/{labourModel}',[\App\Http\Controllers\labour\LabourController::class,'edit'])->name('labour.edit');
 Route::get('labour/form-show/{labourModel}',[\App\Http\Controllers\labour\LabourController::class,'show'])->name('labour.show');

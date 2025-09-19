@@ -46,6 +46,25 @@ class LabourController extends Controller
     }
 
     /**
+     * Show specific payment type detail
+     */
+    public function paymentDetail($labourId, $paymentTypeId)
+    {
+        $labour = LabourModel::with(['company', 'agency'])
+            ->findOrFail($labourId);
+
+        $paymentType = $labour->paymentTypes()
+            ->with('histories')
+            ->findOrFail($paymentTypeId);
+
+        if(request()->ajax()) {
+            return view('labour.payment-detail', compact('labour', 'paymentType'))->render();
+        }
+
+        return view('labour.payment-detail', compact('labour', 'paymentType'));
+    }
+
+    /**
      * API endpoint for searching by passport number
      */
     public function findByPassport($passportNumber)

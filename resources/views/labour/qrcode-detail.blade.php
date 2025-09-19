@@ -1,264 +1,852 @@
 
 <style>
-    body, html { background: #f2f4f8; }
+    body, html { background: #f8f9fa; }
     .qr-mobile-container {
         width: 100%;
-        min-height: auto;
         margin: 0;
-        padding: 0.5rem;
+        padding: 1rem;
         background: #fff;
-        border-radius: 0;
-        box-shadow: none;
         font-size: 0.9rem;
-    }
-    .qr-mobile-header {
-        text-align: center;
-        margin-bottom: 0.5rem;
-    }
-    .qr-mobile-header h3 {
-        font-size: 1.1rem;
-        margin-bottom: 0.3rem;
-        color: #2a3b6e;
-        letter-spacing: 0.5px;
-    }
-    .qr-mobile-info {
-        background: linear-gradient(90deg, #e3eafc 0%, #f8f9fa 100%);
-        border-radius: 8px;
-        padding: 0.5rem 0.8rem;
-        margin-bottom: 0.8rem;
-        font-size: 0.9rem;
-        box-shadow: 0 1px 4px rgba(80,120,200,0.04);
-    }
-    .qr-mobile-info strong {
-        min-width: 80px;
-        display: inline-block;
-        color: #2a3b6e;
-        font-size: 0.85rem;
-    }
-    .qr-mobile-section-title {
-        font-size: 1rem;
-        font-weight: 600;
-        margin: 0.8rem 0 0.4rem 0;
-        color: #1a237e;
-        letter-spacing: 0.2px;
-    }
-    .qr-mobile-list-group {
-        padding-left: 0;
-        margin-bottom: 0.8rem;
-    }
-    .qr-mobile-list-group li {
-        list-style: none;
-        background: #f6faff;
-        margin-bottom: 0.3rem;
-        border-radius: 6px;
-        padding: 0.4rem 0.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.85rem;
-        border: 1px solid #e3eafc;
-    }
-    .qr-mobile-badge {
-        font-size: 0.8rem;
-        padding: 0.25em 0.5em;
-        border-radius: 1em;
-    }
-    .qr-mobile-table {
-        width: 100%;
-        min-width: auto;
-        font-size: 0.8rem;
-        border-collapse: collapse;
-        margin-bottom: 0.8rem;
-        background: #fff;
-        box-shadow: 0 1px 4px rgba(80,120,200,0.04);
-    }
-    .qr-mobile-table th, .qr-mobile-table td {
-        border: 1px solid #e0e0e0;
-        padding: 0.3em 0.2em;
-        text-align: center;
-        word-break: break-word;
-    }
-    .qr-mobile-table th {
-        background: #e3eafc;
-        color: #1a237e;
-        font-weight: 600;
-        font-size: 0.75rem;
-    }
-    .accordion {
-        border-radius: 6px;
-        overflow: hidden;
-        margin-bottom: 0.8rem;
-        background: #f6faff;
-        border: 1px solid #e3eafc;
-        box-shadow: 0 1px 4px rgba(80,120,200,0.04);
-    }
-    .accordion-header {
-        color: #1a237e;
-        font-weight: 600;
-        padding: 0.5rem 0.8rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        font-size: 0.9rem;
-        border-bottom: 1px solid #dbe6fd;
-        transition: background 0.2s;
-    }
-    .accordion-header.completed {
-        background: #e0f7e9;
-    }
-    .accordion-header.partial, .accordion-header.pending, .accordion-header.danger {
-        background: #fff8e1;
-    }
-    .accordion-header:hover {
-        filter: brightness(0.97);
-    }
-    .accordion-content {
-        display: none;
-        padding: 0.5rem 0.8rem;
-        background: #fff;
-        animation: fadeIn 0.2s;
     }
     
-    /* Compact layout for modal */
-    @media (max-width: 1400px) {
+    /* Header Section */
+    .info-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 1rem;
+        color: white;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.8rem;
+    }
+    
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .info-label {
+        font-size: 0.8rem;
+        opacity: 0.9;
+        margin-bottom: 0.2rem;
+    }
+    
+    .info-value {
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    
+    /* Summary Section */
+    .summary-card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #4CAF50;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Payment Table */
+    .payment-table-container {
+        background: #fff;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .payment-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        font-size: 0.85rem;
+    }
+    
+    .payment-table thead th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.75rem 0.5rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.8rem;
+        border: none;
+    }
+    
+    .payment-table tbody tr.table-row {
+        border-bottom: 1px solid #f0f0f0;
+        transition: all 0.2s ease;
+    }
+    
+    .payment-table tbody tr.table-row:hover {
+        background: #f8f9fa;
+    }
+    
+    .payment-table tbody tr.pending {
+        border-left: 4px solid #f44336;
+    }
+    
+    .payment-table tbody tr.partial {
+        border-left: 4px solid #FF9800;
+    }
+    
+    .payment-table tbody tr.completed {
+        border-left: 4px solid #4CAF50;
+        background: rgba(76, 175, 80, 0.05);
+    }
+    
+    .payment-table td {
+        padding: 0.75rem 0.5rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .payment-name-col {
+        max-width: 200px;
+    }
+    
+    .payment-name {
+        font-weight: 600;
+        color: #333;
+        line-height: 1.3;
+    }
+    
+    .text-center {
+        text-align: center;
+    }
+    
+    .amount-pending {
+        color: #f44336;
+        font-weight: 600;
+    }
+    
+    .amount-partial {
+        color: #FF9800;
+        font-weight: 600;
+    }
+    
+    .amount-paid {
+        color: #4CAF50;
+        font-weight: 600;
+    }
+    
+    .amount-completed {
+        color: #4CAF50;
+        font-weight: 600;
+    }
+    
+    /* Status Badges */
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-align: center;
+        display: inline-block;
+        min-width: 80px;
+    }
+    
+    .status-badge.pending {
+        background: rgba(244, 67, 54, 0.1);
+        color: #f44336;
+        border: 1px solid rgba(244, 67, 54, 0.2);
+    }
+    
+    .status-badge.partial {
+        background: rgba(255, 152, 0, 0.1);
+        color: #FF9800;
+        border: 1px solid rgba(255, 152, 0, 0.2);
+    }
+    
+    .status-badge.completed {
+        background: rgba(76, 175, 80, 0.1);
+        color: #4CAF50;
+        border: 1px solid rgba(76, 175, 80, 0.2);
+    }
+    
+    /* Detail Button */
+    .btn-details {
+        background: #2196F3;
+        color: white;
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        margin: 0 auto;
+    }
+    
+    .btn-details:hover {
+        background: #1976D2;
+        transform: translateY(-1px);
+    }
+    
+    .btn-details.active {
+        background: #1976D2;
+    }
+    
+    .expand-icon {
+        font-size: 0.7rem;
+        transition: transform 0.2s;
+    }
+    
+    /* Detail Row */
+    .detail-row td {
+        padding: 0;
+        background: #f8f9fa;
+        border-top: none;
+    }
+    
+    .detail-content {
+        padding: 1rem;
+        border-top: 2px solid #e9ecef;
+    }
+    
+    .history-table {
+        width: 100%;
+        margin-bottom: 1rem;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .history-table th {
+        background: #f5f5f5;
+        padding: 0.8rem 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-align: center;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .history-table td {
+        padding: 0.8rem 0.5rem;
+        text-align: center;
+        font-size: 0.85rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .balance-info {
+        background: white;
+        padding: 0.8rem;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .balance-text {
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .balance-amount {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #f44336;
+    }
+    
+    .pay-button {
+        background: linear-gradient(135deg, #2196F3, #1976D2);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 25px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .pay-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            max-height: 0;
+        }
+        to {
+            opacity: 1;
+            max-height: 500px;
+        }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
         .qr-mobile-container {
-            padding: 0.3rem;
+            padding: 0.5rem;
         }
-        .qr-mobile-info {
-            padding: 0.4rem 0.6rem;
-            margin-bottom: 0.6rem;
+        
+        .info-grid {
+            grid-template-columns: 1fr;
         }
-        .qr-mobile-table {
+        
+        .payment-table-container {
+            padding: 0.5rem;
+        }
+        
+        .payment-table {
             font-size: 0.75rem;
         }
-        .qr-mobile-table th, .qr-mobile-table td {
-            padding: 0.25em 0.15em;
+        
+        .payment-table thead th {
+            padding: 0.5rem 0.3rem;
+            font-size: 0.7rem;
         }
-        .accordion-header {
-            padding: 0.4rem 0.6rem;
-            font-size: 0.85rem;
+        
+        .payment-table td {
+            padding: 0.5rem 0.3rem;
         }
-        .accordion-content {
-            padding: 0.4rem 0.6rem;
+        
+        .payment-name {
+            font-size: 0.8rem;
         }
-    }
-    }
-    .accordion.active .accordion-content {
-        display: block;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    @media (max-width: 600px) {
-        .qr-mobile-header h3 { font-size: 1.07rem; }
-        .qr-mobile-info { font-size: 0.99rem; }
-        .qr-mobile-section-title { font-size: 0.99rem; }
-        .qr-mobile-table th, .qr-mobile-table td { font-size: 0.93rem; padding: 0.38em 0.1em; }
-        .accordion-header { font-size: 0.98rem; }
+        
+        .status-badge {
+            font-size: 0.65rem;
+            padding: 0.2rem 0.4rem;
+            min-width: 70px;
+        }
+        
+        .btn-details {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.7rem;
+        }
+        
+        .detail-content {
+            padding: 0.75rem;
+        }
+        
+        /* Stack table on mobile */
+        .payment-table thead {
+            display: none;
+        }
+        
+        .payment-table tbody tr.table-row {
+            display: block;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            padding: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .payment-table tbody td {
+            display: block;
+            padding: 0.25rem 0;
+            border-bottom: none;
+            position: relative;
+            text-align: left !important;
+        }
+        
+        .payment-table tbody td:before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: #666;
+            font-size: 0.7rem;
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+        
+        .payment-name-col:before {
+            content: "รายการ: ";
+        }
+        
+        .payment-table tbody td:nth-child(2):before {
+            content: "จำนวนเงิน: ";
+        }
+        
+        .payment-table tbody td:nth-child(3):before {
+            content: "ชำระแล้ว: ";
+        }
+        
+        .payment-table tbody td:nth-child(4):before {
+            content: "คงเหลือ: ";
+        }
+        
+        .payment-table tbody td:nth-child(5):before {
+            content: "สถานะ: ";
+        }
+        
+        .payment-table tbody td:nth-child(6):before {
+            content: "การดำเนินการ: ";
+        }
+        
+        .btn-details {
+            width: 100%;
+            justify-content: center;
+            margin-top: 0.5rem;
+        }
     }
 </style>
 <div class="qr-mobile-container">
-    <div class="qr-mobile-header">
-        <h3>ข้อมูลคนงานเบื้องต้น</h3>
+    <!-- Header Section -->
+    <div class="info-card">
+        <h3 style="margin: 0 0 1rem 0; text-align: center; font-size: 1.2rem;">ข้อมูลคนงานเบื้องต้น</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">ชื่อ-นามสกุล</div>
+                <div class="info-value">{{ $labour->labour_prefix }}{{ $labour->labour_fullname }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">เลขที่ Passport</div>
+                <div class="info-value">{{ $labour->labour_passport_number }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">เลขที่วีซ่า</div>
+                <div class="info-value">{{ $labour->labour_visa_number }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">บริษัท</div>
+                <div class="info-value">{{ $labour->company->company_name ?? '-' }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">เอเจนซี่</div>
+                <div class="info-value">{{ $labour->agency->agency_name ?? '-' }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">สถานะแรงงาน</div>
+                <div class="info-value">{{ $labour->labour_status == 'enable' ? 'Enable' : 'Disable' }}</div>
+            </div>
+        </div>
     </div>
-    <div class="qr-mobile-info">
-        <div><strong>ชื่อ-นามสกุล:</strong> {{ $labour->labour_prefix }}{{ $labour->labour_fullname }}</div>
-        <div><strong>เลขที่ Passport:</strong> {{ $labour->labour_passport_number }}</div>
-        <div><strong>เลขที่วีซ่า:</strong> {{ $labour->labour_visa_number }}</div>
-        <div><strong>บริษัท:</strong> {{ $labour->company->company_name ?? '-' }}</div>
-        <div><strong>เอเจนซี่:</strong> {{ $labour->agency->agency_name ?? '-' }}</div>
-        <div><strong>สถานะแรงงาน:</strong> {{ $labour->labour_status == 'enable' ? 'Enable' : 'Disable' }}</div>
-    </div>
-    <div class="qr-mobile-section-title">รายการค้างชำระ</div>
-    @if($pendingTypes->count() > 0)
-        <ul class="qr-mobile-list-group">
-            @foreach($pendingTypes as $type)
-                <li>
-                    <span>{{ $type->payment_name }}</span>
-                    <span class="qr-mobile-badge bg-warning text-dark">
-                        {{ number_format($type->total_amount - $type->calculatePaidAmount(), 2) }} บาท
-                    </span>
-                </li>
-            @endforeach
-        </ul>
-    @else
-        <span class="qr-mobile-badge bg-success">ไม่มีค้างชำระ</span>
-    @endif
-    <div class="qr-mobile-section-title">ประวัติการชำระเงิน (แยกตามประเภท)</div>
+
+    <!-- Summary Section -->
     @php
         $paymentTypes = $labour->paymentTypes;
+        $completedTypes = $paymentTypes->where('status', 'completed');
+        $partialTypes = $paymentTypes->where('status', 'partial');
+        $pendingTypes = $paymentTypes->where('status', 'pending');
+        $totalOwed = $paymentTypes->sum(function($type) {
+            return $type->total_amount - $type->calculatePaidAmount();
+        });
     @endphp
-    @if($paymentTypes->count() > 0)
-        <div style="overflow-x:auto;">
-            @foreach($paymentTypes as $idx => $type)
-                @php
-                    $headerStatusClass = $type->status === 'completed' ? 'completed' : ($type->status === 'partial' ? 'partial' : 'danger');
-                @endphp
-                <div class="accordion" id="acc-{{ $idx }}">
-                    <div class="accordion-header {{ $headerStatusClass }}" onclick="toggleAccordion('acc-{{ $idx }}')">
-                        <span>
-                            {{ $type->payment_name }}
-                            <span class="qr-mobile-badge {{ $type->status === 'completed' ? 'bg-success' : ($type->status === 'partial' ? 'bg-warning text-dark' : 'bg-danger') }}" style="margin-left:0.5em;">
-                                {{ $type->status }}
-                            </span>
-                        </span>
-                        <span style="font-weight:400; font-size:0.98em;">ยอดรวม: {{ number_format($type->total_amount,2) }} บาท</span>
-                    </div>
-                    <div class="accordion-content">
-                        @php
-                            $histories = $type->histories->sortByDesc('payment_date');
-                        @endphp
-                        @if($histories->count() > 0)
-                            <table class="qr-mobile-table" style="margin-bottom:0.5rem;">
-                                <thead>
-                                    <tr>
-                                        <th>วันที่ชำระ</th>
-                                        <th>จำนวนเงิน</th>
-                                        <th>ไฟล์หลักฐาน</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($histories as $history)
-                                        <tr>
-                                            <td>{{ $history->payment_date ? $history->payment_date->format('d/m/Y') : '-' }}</td>
-                                            <td>{{ number_format($history->amount, 2) }}</td>
-                                            <td>
-                                                @if($history->proof_file)
-                                                    <a href="{{ asset('storage/' . $history->proof_file) }}" target="_blank">ดูไฟล์</a>
-                                                @else
-                                                    -
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        @else
-                            <div style="padding:0.5rem 1rem; color:#888; font-size:0.97em;">ไม่มีประวัติการชำระเงิน</div>
-                        @endif
-                        <div style="padding:0.3rem 1rem 0.7rem 1rem; font-size:0.97em; color:#555; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5em;">
-                            <span>ยอดคงเหลือ: <b>{{ number_format($type->total_amount - $type->calculatePaidAmount(),2) }}</b> บาท</span>
-                            <a href="{{ route('labour.paymentEdit', $labour->labour_id) }}" class="btn btn-primary btn-sm" style="background:#1976d2; border:none; border-radius:20px; padding:0.4em 1.2em; font-size:0.98em; color:#fff;">ชำระเงิน</a>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
+    
+    <div class="summary-card">
+        <h4 style="margin: 0 0 0.8rem 0; color: #333;">สรุปสถานะการชำระ</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem;">
+            <div style="text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: 700; color: #4CAF50;">{{ $completedTypes->count() }}</div>
+                <div style="font-size: 0.8rem; color: #666;">ชำระครบ</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: 700; color: #FF9800;">{{ $partialTypes->count() }}</div>
+                <div style="font-size: 0.8rem; color: #666;">ชำระบางส่วน</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: 700; color: #f44336;">{{ $pendingTypes->count() }}</div>
+                <div style="font-size: 0.8rem; color: #666;">ยังไม่ชำระ</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 1.2rem; font-weight: 700; color: #f44336;">{{ number_format($totalOwed, 2) }}</div>
+                <div style="font-size: 0.8rem; color: #666;">ยอดค้างชำระ (บาท)</div>
+            </div>
         </div>
-        <script>
-            function toggleAccordion(id) {
-                var acc = document.getElementById(id);
-                if(acc.classList.contains('active')) {
-                    acc.classList.remove('active');
-                } else {
-                    document.querySelectorAll('.accordion').forEach(function(a){ a.classList.remove('active'); });
-                    acc.classList.add('active');
-                }
-            }
-        </script>
+    </div>
+
+    <!-- Payment Table -->
+    @if($paymentTypes->count() > 0)
+        <div class="payment-table-container">
+            <h4 style="margin: 0 0 1rem 0; color: #333;">รายการค่าใช้จ่าย</h4>
+            <div class="table-responsive">
+                <table class="payment-table">
+                    <thead>
+                        <tr>
+                            <th>รายการ</th>
+                            <th class="text-center">จำนวนเงิน</th>
+                            <th class="text-center">ชำระแล้ว</th>
+                            <th class="text-center">คงเหลือ</th>
+                            <th class="text-center">สถานะ</th>
+                            <th class="text-center">การดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- รายการที่ยังไม่ชำระ -->
+                        @foreach($pendingTypes as $type)
+                            @php
+                                $paidAmount = $type->calculatePaidAmount();
+                                $remainingAmount = $type->total_amount - $paidAmount;
+                            @endphp
+                            <tr class="table-row pending">
+                                <td class="payment-name-col">
+                                    <div class="payment-name">{{ $type->payment_name }}</div>
+                                </td>
+                                <td class="text-center">{{ number_format($type->total_amount, 2) }}</td>
+                                <td class="text-center">{{ number_format($paidAmount, 2) }}</td>
+                                <td class="text-center amount-pending">{{ number_format($remainingAmount, 2) }}</td>
+                                <td class="text-center">
+                                    <span class="status-badge pending">⏰ ยังไม่ชำระ</span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn-details" onclick="toggleDetails('detail-{{ $type->id }}')">
+                                        <i class="expand-icon">▼</i> รายละเอียด
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="detail-row" id="detail-{{ $type->id }}" style="display: none;">
+                                <td colspan="6">
+                                    <div class="detail-content">
+                                        @include('labour.partials.payment-table-detail', ['type' => $type])
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+
+                        <!-- รายการที่ชำระบางส่วน -->
+                        @foreach($partialTypes as $type)
+                            @php
+                                $paidAmount = $type->calculatePaidAmount();
+                                $remainingAmount = $type->total_amount - $paidAmount;
+                            @endphp
+                            <tr class="table-row partial">
+                                <td class="payment-name-col">
+                                    <div class="payment-name">{{ $type->payment_name }}</div>
+                                </td>
+                                <td class="text-center">{{ number_format($type->total_amount, 2) }}</td>
+                                <td class="text-center amount-paid">{{ number_format($paidAmount, 2) }}</td>
+                                <td class="text-center amount-partial">{{ number_format($remainingAmount, 2) }}</td>
+                                <td class="text-center">
+                                    <span class="status-badge partial">⚠ ชำระบางส่วน</span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn-details" onclick="toggleDetails('detail-{{ $type->id }}')">
+                                        <i class="expand-icon">▼</i> รายละเอียด
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="detail-row" id="detail-{{ $type->id }}" style="display: none;">
+                                <td colspan="6">
+                                    <div class="detail-content">
+                                        @include('labour.partials.payment-table-detail', ['type' => $type])
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+
+                        <!-- รายการที่ชำระครบ (อยู่ล่างสุด) -->
+                        @foreach($completedTypes as $type)
+                            @php
+                                $paidAmount = $type->calculatePaidAmount();
+                                $remainingAmount = $type->total_amount - $paidAmount;
+                            @endphp
+                            <tr class="table-row completed">
+                                <td class="payment-name-col">
+                                    <div class="payment-name">{{ $type->payment_name }}</div>
+                                </td>
+                                <td class="text-center">{{ number_format($type->total_amount, 2) }}</td>
+                                <td class="text-center amount-completed">{{ number_format($paidAmount, 2) }}</td>
+                                <td class="text-center">{{ number_format($remainingAmount, 2) }}</td>
+                                <td class="text-center">
+                                    <span class="status-badge completed">✓ ชำระครบ</span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn-details" onclick="toggleDetails('detail-{{ $type->id }}')">
+                                        <i class="expand-icon">▼</i> รายละเอียด
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="detail-row" id="detail-{{ $type->id }}" style="display: none;">
+                                <td colspan="6">
+                                    <div class="detail-content">
+                                        @include('labour.partials.payment-table-detail', ['type' => $type])
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
     @else
-        <span class="text-muted">ไม่มีประวัติการชำระเงิน</span>
+        <div class="summary-card" style="text-align: center; border-left-color: #4CAF50;">
+            <h4 style="color: #4CAF50; margin: 0;">🎉 ไม่มีรายการค้างชำระ</h4>
+            <p style="margin: 0.5rem 0 0 0; color: #666;">คนงานรายนี้ชำระเงินครบถ้วนแล้ว</p>
+        </div>
     @endif
 </div>
+
+<script>
+function toggleDetails(detailId) {
+    const detailRow = document.getElementById(detailId);
+    const button = event.target.closest('.btn-details');
+    const icon = button.querySelector('.expand-icon');
+    
+    if (detailRow.style.display === 'none') {
+        detailRow.style.display = 'table-row';
+        icon.style.transform = 'rotate(180deg)';
+        button.classList.add('active');
+    } else {
+        detailRow.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)';
+        button.classList.remove('active');
+    }
+}
+</script>
+
+<style>
+/* Mobile-First Responsive Design */
+@media (max-width: 768px) {
+    .qr-mobile-container {
+        padding: 0.5rem;
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .info-item {
+        padding: 0.75rem;
+    }
+    
+    .info-card, .summary-card, .payment-group {
+        margin-bottom: 0.75rem;
+        border-radius: 12px;
+    }
+    
+    .payment-header {
+        padding: 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .payment-name {
+        font-size: 0.95rem;
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .payment-amount {
+        font-size: 0.9rem;
+    }
+    
+    .group-header {
+        padding: 1rem;
+        font-size: 0.95rem;
+    }
+    
+    .status-icon {
+        width: 24px;
+        height: 24px;
+        font-size: 0.8rem;
+    }
+    
+    .payment-summary {
+        padding: 0.75rem;
+    }
+    
+    .summary-value {
+        font-size: 1rem;
+    }
+    
+    .history-item {
+        padding: 0.75rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .history-amount {
+        text-align: left;
+        width: 100%;
+    }
+    
+    .payment-btn {
+        padding: 0.65rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Tablet Styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .qr-mobile-container {
+        padding: 1rem;
+        max-width: 100%;
+    }
+    
+    .info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .payment-header {
+        padding: 1.25rem;
+    }
+    
+    .group-header {
+        padding: 1.25rem;
+    }
+}
+
+/* Desktop Styles */
+@media (min-width: 1025px) {
+    .qr-mobile-container {
+        padding: 1.5rem;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .payment-header {
+        padding: 1.5rem;
+    }
+    
+    .group-header {
+        padding: 1.5rem;
+    }
+    
+    .payment-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* Print Styles */
+@media print {
+    .qr-mobile-container {
+        padding: 0;
+        box-shadow: none;
+        background: white;
+    }
+    
+    .payment-group {
+        page-break-inside: avoid;
+        margin-bottom: 1rem;
+    }
+    
+    .payment-item {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .payment-details {
+        display: block !important;
+    }
+    
+    .expand-icon {
+        display: none;
+    }
+    
+    .payment-btn {
+        display: none;
+    }
+    
+    a[href*="asset"] {
+        text-decoration: underline;
+        color: #000 !important;
+    }
+}
+
+/* Animation Improvements */
+.payment-item.active .payment-details {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        max-height: 1000px;
+        transform: translateY(0);
+    }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+    .payment-item,
+    .payment-details,
+    .payment-btn {
+        transition: none;
+        animation: none;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .info-card,
+    .summary-card,
+    .payment-group,
+    .payment-item {
+        border: 2px solid #000;
+    }
+    
+    .group-header.completed {
+        background: #000;
+        color: #fff;
+    }
+    
+    .group-header.partial {
+        background: #666;
+        color: #fff;
+    }
+    
+    .group-header.pending {
+        background: #333;
+        color: #fff;
+    }
+}
+
+/* Focus States for Accessibility */
+.payment-header:focus,
+.payment-btn:focus {
+    outline: 3px solid #2196F3;
+    outline-offset: 2px;
+}
+
+/* Loading State */
+.qr-mobile-container.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.qr-mobile-container.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 32px;
+    height: 32px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #2196F3;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+</style>
 
