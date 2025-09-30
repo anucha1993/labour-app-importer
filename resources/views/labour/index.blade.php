@@ -211,7 +211,7 @@
                 <th>ลำดับ</th>
                 <th>ชื่อ-สกุล</th>
                 <th>เลขที่หนังสือเดินทาง</th>
-                <th>เลขที่วีซ่า</th>
+                <th>รหัสพนักงาน</th>
                 <th>บริษัท</th>
               
                  @if ($request->column_name_type === 'labour_day90_date_end')<th>วันที่หมด 90 วัน</th> @endif
@@ -232,7 +232,7 @@
                     <td>{{++$key}}</td>
                     <td>{{$item->labour_prefix}}.{{$item->labour_fullname}}</td>
                     <td>{{$item->labour_passport_number}}</td>
-                    <td>{{$item->labour_visa_number}}</td>
+                    <td>{{$item->labour_number}}</td>
 
                     <td>{{$item->company->company_name}}</td>
 
@@ -867,8 +867,8 @@
                     $('input[name="labour_ids[]"]:checked').each(function() {
                         let row = $(this).closest('tr');
                         let qrUrl = row.find('.qr-code-link').attr('href');
-                        let passportNumber = row.find('td:nth-child(4)').text();
-                        printContent += '<td><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(qrUrl) + '" /><div class="qr-info">Passport: ' + passportNumber + '</div></td>';
+                        let passportNumber = row.find('td:nth-child(5)').text();
+                        printContent += '<td><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(qrUrl) + '" /><div class="qr-info">รหัสพนักงาน: ' + passportNumber + '</div></td>';
                         colCount++;
                         if (colCount % 2 === 0) printContent += '</tr><tr>';
                     });

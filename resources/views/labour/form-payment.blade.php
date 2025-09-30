@@ -682,25 +682,72 @@ $('#savePaymentTypes').click(function() {
 
         // Add Payment History Modal
         $(document).on('click', '.add-payment-history', function() {
+            console.log('Add payment history button clicked');
+            
             const paymentTypeItem = $(this).closest('.payment-type-item');
             const status = paymentTypeItem.find('.status-field').val();
             
+            console.log('Payment type status:', status);
+            
             if (status === 'completed') {
-                alert('ไม่สามารถเพิ่มการชำระเงินได้ เนื่องจากชำระครบแล้ว');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่สามารถเพิ่มการชำระเงินได้',
+                    text: 'ประเภทการชำระนี้ชำระครบแล้ว'
+                });
                 return;
             }
             
             const paymentTypeId = $(this).data('payment-type');
+            console.log('Payment type ID:', paymentTypeId);
+            
+            if (!paymentTypeId) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    text: 'ไม่พบ ID ของประเภทการชำระเงิน'
+                });
+                return;
+            }
+            
+            // Clear previous form data
+            $('#modalAmount').val('');
+            $('#modalProofFile').val('');
+            
+            // Set payment type ID
             $('#modalPaymentTypeId').val(paymentTypeId);
+            
+            // Set current date/time
+            const now = moment().format('DD/MM/YYYY HH:mm:ss');
+            $('#modalPaymentDate').val(now);
+            
+            console.log('Opening modal with:', {
+                paymentTypeId: paymentTypeId,
+                currentDateTime: now
+            });
+            
             $('#addPaymentHistoryModal').modal('show');
         });
 
         // Save Payment History
         $('#savePaymentHistory').click(function() {
+            console.log('Save payment history button clicked');
+            
             // Check if SweetAlert2 is loaded
             if (typeof Swal === 'undefined') {
                 console.error('SweetAlert2 is not loaded');
                 alert('ระบบแจ้งเตือนมีปัญหา กรุณารีเฟรชหน้าเว็บ');
+                return;
+            }
+            
+            // Check if modal elements exist
+            if (!$('#modalPaymentTypeId').length || !$('#modalAmount').length || !$('#modalPaymentDate').length) {
+                console.error('Modal elements not found');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    text: 'ไม่พบองค์ประกอบของฟอร์ม กรุณารีเฟรชหน้าเว็บ'
+                });
                 return;
             }
 
@@ -709,6 +756,12 @@ $('#savePaymentTypes').click(function() {
             const paymentDate = $('#modalPaymentDate').val();
             
             // Client-side validation
+            console.log('Validating inputs:', {
+                paymentTypeId: paymentTypeId,
+                newAmount: newAmount,
+                paymentDate: paymentDate
+            });
+            
             if (!paymentTypeId) {
                 Swal.fire({
                     icon: 'error',
@@ -754,19 +807,59 @@ $('#savePaymentTypes').click(function() {
                 return;
             }
 
+            // ตรวจสอบรูปแบบวันที่
+            if (!moment(paymentDate, 'DD/MM/YYYY HH:mm:ss', true).isValid()) {
+                console.error('Invalid date format:', paymentDate);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    text: 'รูปแบบวันที่ไม่ถูกต้อง กรุณาเลือกวันที่ใหม่'
+                });
+                return;
+            }
+
             // Prepare form data
-            // Convert Thai date format to MySQL format
-            const paymentDateTime = moment(paymentDate, 'DD/MM/YYYY HH:mm:ss').format('YYYY-MM-DD HH:mm:ss');
+            // Convert date to ISO 8601 format (Y-m-d\TH:i) as required by server
+            const paymentDateTime = moment(paymentDate, 'DD/MM/YYYY HH:mm:ss').format('YYYY-MM-DDTHH:mm');
+            
+            // ตรวจสอบ CSRF token
+            const csrfToken = $('meta[name="csrf-token"]').attr('content');
+            if (!csrfToken) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    text: 'ไม่พบ CSRF Token กรุณารีเฟรชหน้าเว็บ'
+                });
+                return;
+            }
+            
+            console.log('Preparing form data:', {
+                paymentTypeId: paymentTypeId,
+                amount: newAmount,
+                paymentDate: paymentDateTime,
+                csrfToken: csrfToken ? 'found' : 'not found'
+            });
             
             const formData = new FormData();
-            formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+            formData.append('_token', csrfToken);
             formData.append('payment_type_id', paymentTypeId);
             formData.append('amount', newAmount);
             formData.append('payment_date', paymentDateTime);
             
             const proofFile = $('#modalProofFile')[0].files[0];
             if (proofFile) {
+                console.log('Proof file:', {
+                    name: proofFile.name,
+                    size: proofFile.size,
+                    type: proofFile.type
+                });
                 formData.append('proof_file', proofFile);
+            }
+            
+            // Debug form data
+            console.log('FormData entries:');
+            for (let pair of formData.entries()) {
+                console.log(pair[0], pair[1]);
             }
 
             // Show loading state
@@ -782,34 +875,78 @@ $('#savePaymentTypes').click(function() {
             });
 
             // Submit payment
-            $.ajax({
+            const ajaxConfig = {
                 url: '/labour/payment-history',
                 method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'บันทึกข้อมูลสำเร็จ',
-                        text: 'ระบบจะรีเฟรชหน้าเพื่อแสดงข้อมูลล่าสุด',
-                        showConfirmButton: false,
-                        timer: 1500
-                    }).then(() => {
-                        location.reload();
-                    });
-                },
-                error: function(xhr) {
-                    let errorMessage = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            };
+            
+            // ถ้ามีไฟล์ ใช้ FormData, ถ้าไม่มีใช้ JSON
+            if (proofFile) {
+                ajaxConfig.data = formData;
+                ajaxConfig.processData = false;
+                ajaxConfig.contentType = false;
+            } else {
+                // ส่งเป็น JSON ถ้าไม่มีไฟล์
+                ajaxConfig.data = {
+                    _token: csrfToken,
+                    payment_type_id: paymentTypeId,
+                    amount: newAmount,
+                    payment_date: paymentDateTime
+                };
+                ajaxConfig.dataType = 'json';
+            }
+            
+            console.log('AJAX Config:', ajaxConfig);
+            
+            $.ajax(ajaxConfig).done(function(response) {
+                console.log('Payment saved successfully:', response);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'บันทึกข้อมูลสำเร็จ',
+                    text: 'ระบบจะรีเฟรชหน้าเพื่อแสดงข้อมูลล่าสุด',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    location.reload();
+                });
+            }).fail(function(xhr, status, error) {
+                console.error('AJAX Error:', {
+                    status: xhr.status,
+                    statusText: xhr.statusText,
+                    responseText: xhr.responseText,
+                    error: error
+                });
+                
+                let errorMessage = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+                let detailMessage = '';
+                
+                if (xhr.status === 422) {
+                    // Validation errors
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        const errors = xhr.responseJSON.errors;
+                        const errorList = Object.values(errors).flat();
+                        errorMessage = 'ข้อมูลไม่ถูกต้อง';
+                        detailMessage = errorList.join('<br>');
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
                         errorMessage = xhr.responseJSON.message;
                     }
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'ข้อผิดพลาด',
-                        text: errorMessage
-                    });
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                } else if (xhr.status === 0) {
+                    errorMessage = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้';
+                } else if (xhr.status === 500) {
+                    errorMessage = 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์';
                 }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    html: detailMessage ? `${errorMessage}<br><small>${detailMessage}</small>` : errorMessage,
+                    footer: `HTTP Status: ${xhr.status}`
+                });
             });
         });
 
