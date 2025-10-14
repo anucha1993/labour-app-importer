@@ -1,6 +1,92 @@
 @extends('layouts.main_layout')
 
 @section('content')
+<style>
+/* QR Code Styles */
+.qr-code-img {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.qr-code-img:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.2);
+}
+
+.qr-fallback {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px dashed #6c757d !important;
+    border-radius: 4px;
+    color: #6c757d;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-family: monospace;
+}
+
+.qr-fallback:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    border-color: #495057 !important;
+    color: #495057;
+    transform: scale(1.05);
+}
+
+.qr-code-link {
+    text-decoration: none;
+    display: inline-block;
+}
+
+.qr-code-link:hover {
+    text-decoration: none;
+}
+
+/* Loading animation for QR codes */
+.qr-loading {
+    width: 60px;
+    height: 60px;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.qr-loading::after {
+    content: '';
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #007bff;
+    border-radius: 50%;
+    animation: qr-spin 1s linear infinite;
+}
+
+@keyframes qr-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* QR Code status indicators */
+.qr-status {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.qr-status.success { background: #28a745; }
+.qr-status.error { background: #dc3545; }
+.qr-status.loading { background: #ffc107; }
+</style>
     <h3>ข้อมูลคนงานต่างด้าว</h3>
     @if (count($errors) > 0)
         <div class="alert alert-danger">
@@ -196,9 +282,17 @@
 
     <!-- Print QR Codes Button -->
     <div class="mb-3">
-        <button id="printSelectedQRCodes" class="btn btn-primary" disabled>
-            พิมพ์ QR Code ที่เลือก
-        </button>
+        <div class="btn-group" role="group">
+            <button id="printSelectedQRCodes" class="btn btn-primary" disabled>
+                <i class="fas fa-print"></i> พิมพ์ QR Codes ที่เลือก
+            </button>
+            <button id="previewSelectedQRCodes" class="btn btn-info" disabled>
+                <i class="fas fa-eye"></i> ดูตัวอย่าง QR Codes
+            </button>
+            {{-- <button id="testSelectedQRCodes" class="btn btn-warning" disabled>
+                <i class="fas fa-vial"></i> ทดสอบ QR Codes
+            </button> --}}
+        </div>
         <span id="selectedCount" class="ms-2">(0 รายการที่เลือก)</span>
     </div>
 
@@ -251,8 +345,26 @@
                     </td>
                         <td>
                             {{-- QR Code ปุ่ม --}}
-                            <a href="{{ route('labour.qrcodeDetail', $item->labour_id) }}" class="qr-code-link">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&data={{ urlencode($item->labour_passport_number)}}" alt="QR" width="60" height="60" />
+                            <a href="{{ route('labour.qrcodeDetail', $item->labour_id) }}" class="qr-code-link" title="คลิกเพื่อดูข้อมูลคนงาน">
+                                <div class="position-relative d-inline-block">
+                                    <div class="qr-loading" id="qr-loading-{{ $item->labour_id }}"></div>
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&data={{ urlencode($item->labour_passport_number)}}" 
+                                         alt="QR Code: {{ $item->labour_passport_number }}" 
+                                         width="60" 
+                                         height="60" 
+                                         class="qr-code-img"
+                                         data-passport="{{ $item->labour_passport_number }}"
+                                         data-labour-id="{{ $item->labour_id }}"
+                                         style="display: none;"
+                                         onload="handleQRLoad(this)"
+                                         onerror="handleQRError(this)" />
+                                    <div class="qr-fallback" style="display: none; width: 60px; height: 60px;" onclick="retryQRCode(this)">
+                                        <strong style="font-size: 12px;">QR</strong>
+                                        <small style="font-size: 9px;">{{ substr($item->labour_passport_number, 0, 6) }}</small>
+                                        <div style="font-size: 8px; margin-top: 2px;">📱 คลิก</div>
+                                    </div>
+                                    <div class="qr-status loading" id="qr-status-{{ $item->labour_id }}"></div>
+                                </div>
                             </a>
                         </td>
                         <td>
@@ -313,6 +425,31 @@
         </tbody>
     </table>
     {!! $labours->withQueryString()->links('pagination::bootstrap-4') !!}
+    
+    <!-- QR Code Control Panel -->
+    <div class="row mt-3 mb-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">QR Code Controls</h6>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-primary" onclick="forceLoadAllQRCodes()">
+                            <i class="fas fa-sync-alt"></i> โหลด QR ทั้งหมดใหม่
+                        </button>
+                        <button type="button" class="btn btn-sm btn-warning" onclick="retryFailedQRCodes()">
+                            <i class="fas fa-exclamation-triangle"></i> ลองโหลดที่ล้มเหลวใหม่
+                        </button>
+                        <button type="button" class="btn btn-sm btn-info" onclick="checkQRStatus()">
+                            <i class="fas fa-info-circle"></i> ตรวจสอบสถานะ
+                        </button>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        หาก QR Code ไม่แสดงในหน้าใหม่ ให้กดปุ่ม "โหลด QR ทั้งหมดใหม่"
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <br>
 
@@ -842,9 +979,11 @@
                 let selectedCount = $('input[name="labour_ids[]"]:checked').length;
                 $('#selectedCount').text(`(${selectedCount} รายการที่เลือก)`);
                 $('#printSelectedQRCodes').prop('disabled', selectedCount === 0);
+                $('#previewSelectedQRCodes').prop('disabled', selectedCount === 0);
+                $('#testSelectedQRCodes').prop('disabled', selectedCount === 0);
             }
 
-            // Handle Print QR Codes button
+            // Enhanced Print QR Codes with preloading and fallback
             $('#printSelectedQRCodes').click(function() {
                 let selectedIds = [];
                 $('input[name="labour_ids[]"]:checked').each(function() {
@@ -852,41 +991,385 @@
                 });
 
                 if (selectedIds.length > 0) {
-                    let printFrame = $('<iframe>', {
-                        name: 'printQRCodes',
-                        class: 'printFrame'
-                    }).css('display', 'none').appendTo('body');
-
-                    let printContent = '<html><head><style>' +
-                        'table.qr-table { border-collapse: collapse; }' +
-                        'table.qr-table td { border: 1.5px dashed #333; width: 180px; height: 220px; padding: 10px; text-align: center; vertical-align: middle; }' +
-                        '.qr-info { font-size: 15px; font-weight: bold; margin-top: 4px; text-align: center; }' +
-                        '@media print { body { margin: 0; } td { page-break-inside: avoid; } }' +
-                        '</style></head><body><table class="qr-table"><tr>';
-                    let colCount = 0;
+                    const $button = $(this);
+                    $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> กำลังเตรียม QR codes...');
+                    
+                    // Collect QR data
+                    let qrData = [];
                     $('input[name="labour_ids[]"]:checked').each(function() {
                         let row = $(this).closest('tr');
                         let qrUrl = row.find('.qr-code-link').attr('href');
-                        let passportNumber = row.find('td:nth-child(5)').text();
-                        printContent += '<td><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(qrUrl) + '" /><div class="qr-info">รหัสพนักงาน: ' + passportNumber + '</div></td>';
-                        colCount++;
-                        if (colCount % 2 === 0) printContent += '</tr><tr>';
+                        let passportNumber = row.find('td:nth-child(5)').text().trim();
+                        
+                        qrData.push({
+                            url: qrUrl,
+                            passport: passportNumber
+                        });
                     });
-                    printContent += '</tr></table></body></html>';
 
-                    let frameDoc = printFrame[0].contentWindow.document;
-                    frameDoc.open();
-                    frameDoc.write(printContent);
-                    frameDoc.close();
+                    // Preload all QR codes with fallback services
+                    preloadQRCodesForPrint(qrData).then(function(loadedQRCodes) {
+                        console.log(`Successfully loaded ${loadedQRCodes.length} QR codes for printing`);
+                        
+                        // Create print frame
+                        let printFrame = $('<iframe>', {
+                            name: 'printQRCodes',
+                            class: 'printFrame'
+                        }).css('display', 'none').appendTo('body');
 
-                    setTimeout(function() {
-                        printFrame[0].contentWindow.print();
+                        let printContent = '<html><head><style>' +
+                            'table.qr-table { border-collapse: collapse; }' +
+                            'table.qr-table td { border: 1.5px dashed #333; width: 180px; height: 220px; padding: 10px; text-align: center; vertical-align: middle; }' +
+                            '.qr-info { font-size: 15px; font-weight: bold; margin-top: 4px; text-align: center; }' +
+                            '.qr-fallback { font-size: 12px; color: #666; }' +
+                            '@media print { body { margin: 0; } td { page-break-inside: avoid; } }' +
+                            '</style></head><body><table class="qr-table"><tr>';
+                        
+                        let colCount = 0;
+                        loadedQRCodes.forEach(function(qrCode) {
+                            if (qrCode.success) {
+                                printContent += `<td><img src="${qrCode.src}" style="max-width: 100px; max-height: 100px;" /><div class="qr-info">รหัสพนักงาน: ${qrCode.passport}</div></td>`;
+                            } else {
+                                // Fallback for failed QR codes
+                                printContent += `<td><div style="width: 100px; height: 100px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; margin: 0 auto;"><div class="qr-fallback">QR Code<br>ไม่สามารถโหลดได้</div></div><div class="qr-info">รหัสพนักงาน: ${qrCode.passport}</div></td>`;
+                            }
+                            colCount++;
+                            if (colCount % 2 === 0) printContent += '</tr><tr>';
+                        });
+                        
+                        printContent += '</tr></table></body></html>';
+
+                        let frameDoc = printFrame[0].contentWindow.document;
+                        frameDoc.open();
+                        frameDoc.write(printContent);
+                        frameDoc.close();
+
+                        // Wait for images to load in print frame, then print
                         setTimeout(function() {
-                            printFrame.remove();
+                            printFrame[0].contentWindow.print();
+                            setTimeout(function() {
+                                printFrame.remove();
+                                $button.prop('disabled', false).html('<i class="fas fa-print"></i> พิมพ์ QR Codes ที่เลือก');
+                            }, 1000);
                         }, 1000);
-                    }, 500);
+                        
+                    }).catch(function(error) {
+                        console.error('Error loading QR codes for print:', error);
+                        alert('เกิดข้อผิดพลาดในการเตรียม QR codes กรุณาลองใหม่');
+                        $button.prop('disabled', false).html('<i class="fas fa-print"></i> พิมพ์ QR Codes ที่เลือก');
+                    });
                 }
             });
+
+            // Preload QR codes for printing with fallback services
+            function preloadQRCodesForPrint(qrDataArray) {
+                return new Promise(function(resolve) {
+                    const qrServices = [
+                        'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=',
+                        'https://chart.googleapis.com/chart?chs=120x120&cht=qr&chl=',
+                        'https://quickchart.io/qr?text=',
+                        'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='
+                    ];
+                    
+                    const results = [];
+                    let completed = 0;
+                    
+                    qrDataArray.forEach(function(qrData, index) {
+                        let serviceIndex = 0;
+                        
+                        function tryLoadQR() {
+                            if (serviceIndex >= qrServices.length) {
+                                // All services failed
+                                results[index] = {
+                                    success: false,
+                                    passport: qrData.passport,
+                                    src: null
+                                };
+                                completed++;
+                                if (completed === qrDataArray.length) {
+                                    resolve(results);
+                                }
+                                return;
+                            }
+                            
+                            const service = qrServices[serviceIndex];
+                            const fullUrl = service + encodeURIComponent(qrData.passport) + '&t=' + Date.now();
+                            
+                            const img = new Image();
+                            const timeout = setTimeout(function() {
+                                serviceIndex++;
+                                tryLoadQR();
+                            }, 3000); // 3 second timeout per service
+                            
+                            img.onload = function() {
+                                clearTimeout(timeout);
+                                results[index] = {
+                                    success: true,
+                                    passport: qrData.passport,
+                                    src: fullUrl
+                                };
+                                completed++;
+                                if (completed === qrDataArray.length) {
+                                    resolve(results);
+                                }
+                            };
+                            
+                            img.onerror = function() {
+                                clearTimeout(timeout);
+                                serviceIndex++;
+                                setTimeout(tryLoadQR, 200); // Short delay before trying next service
+                            };
+                            
+                            img.src = fullUrl;
+                        }
+                        
+                        // Start loading with a small delay between each QR code
+                        setTimeout(tryLoadQR, index * 100);
+                    });
+                });
+            }
+
+            // Preview Selected QR Codes
+            $('#previewSelectedQRCodes').click(function() {
+                let selectedIds = [];
+                $('input[name="labour_ids[]"]:checked').each(function() {
+                    selectedIds.push($(this).val());
+                });
+
+                if (selectedIds.length > 0) {
+                    const $button = $(this);
+                    $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> กำลังเตรียมตัวอย่าง...');
+                    
+                    // Collect QR data
+                    let qrData = [];
+                    $('input[name="labour_ids[]"]:checked').each(function() {
+                        let row = $(this).closest('tr');
+                        let qrUrl = row.find('.qr-code-link').attr('href');
+                        let passportNumber = row.find('td:nth-child(5)').text().trim();
+                        
+                        qrData.push({
+                            url: qrUrl,
+                            passport: passportNumber
+                        });
+                    });
+
+                    // Show preview modal
+                    showQRPreviewModal(qrData);
+                    $button.prop('disabled', false).html('<i class="fas fa-eye"></i> ดูตัวอย่าง QR Codes');
+                }
+            });
+
+            // Test Selected QR Codes
+            $('#testSelectedQRCodes').click(function() {
+                let selectedIds = [];
+                $('input[name="labour_ids[]"]:checked').each(function() {
+                    selectedIds.push($(this).val());
+                });
+
+                if (selectedIds.length > 0) {
+                    const $button = $(this);
+                    $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> กำลังทดสอบ...');
+                    
+                    // Collect QR data
+                    let qrData = [];
+                    $('input[name="labour_ids[]"]:checked').each(function() {
+                        let row = $(this).closest('tr');
+                        let qrUrl = row.find('.qr-code-link').attr('href');
+                        let passportNumber = row.find('td:nth-child(5)').text().trim();
+                        
+                        qrData.push({
+                            url: qrUrl,
+                            passport: passportNumber
+                        });
+                    });
+
+                    // Test QR codes
+                    testQRCodesAvailability(qrData).then(function(results) {
+                        showQRTestResults(results);
+                        $button.prop('disabled', false).html('<i class="fas fa-vial"></i> ทดสอบ QR Codes');
+                    });
+                }
+            });
+
+            // Show QR Preview Modal
+            function showQRPreviewModal(qrData) {
+                let modalContent = `
+                    <div class="modal fade" id="qrPreviewModal" tabindex="-1">
+                        <div class="modal-dialog modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">ตัวอย่าง QR Codes ที่เลือก (${qrData.length} รายการ)</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">`;
+                
+                qrData.forEach(function(data, index) {
+                    modalContent += `
+                        <div class="col-md-3 mb-3 text-center">
+                            <div class="card">
+                                <div class="card-body">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(data.passport)}&t=${Date.now()}" 
+                                         class="img-fluid mb-2" 
+                                         onerror="this.src='https://chart.googleapis.com/chart?chs=120x120&cht=qr&chl=${encodeURIComponent(data.passport)}'" />
+                                    <small class="text-muted d-block">รหัส: ${data.passport}</small>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+                
+                modalContent += `
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                                    <button type="button" class="btn btn-primary" onclick="$('#printSelectedQRCodes').click(); $('#qrPreviewModal').modal('hide');">
+                                        <i class="fas fa-print"></i> พิมพ์เลย
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                
+                // Remove existing modal and add new one
+                $('#qrPreviewModal').remove();
+                $('body').append(modalContent);
+                $('#qrPreviewModal').modal('show');
+            }
+
+            // Test QR Codes Availability
+            function testQRCodesAvailability(qrData) {
+                return new Promise(function(resolve) {
+                    const results = [];
+                    let completed = 0;
+                    
+                    qrData.forEach(function(data, index) {
+                        const qrServices = [
+                            'https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=',
+                            'https://chart.googleapis.com/chart?chs=60x60&cht=qr&chl=',
+                            'https://quickchart.io/qr?text='
+                        ];
+                        
+                        const serviceResults = [];
+                        let serviceCompleted = 0;
+                        
+                        qrServices.forEach(function(service, serviceIndex) {
+                            const url = service + encodeURIComponent(data.passport);
+                            const img = new Image();
+                            
+                            const timeout = setTimeout(function() {
+                                serviceResults[serviceIndex] = { success: false, time: 'timeout' };
+                                serviceCompleted++;
+                                if (serviceCompleted === qrServices.length) {
+                                    results[index] = {
+                                        passport: data.passport,
+                                        services: serviceResults
+                                    };
+                                    completed++;
+                                    if (completed === qrData.length) {
+                                        resolve(results);
+                                    }
+                                }
+                            }, 5000);
+                            
+                            const startTime = Date.now();
+                            
+                            img.onload = function() {
+                                clearTimeout(timeout);
+                                serviceResults[serviceIndex] = { 
+                                    success: true, 
+                                    time: (Date.now() - startTime) + 'ms' 
+                                };
+                                serviceCompleted++;
+                                if (serviceCompleted === qrServices.length) {
+                                    results[index] = {
+                                        passport: data.passport,
+                                        services: serviceResults
+                                    };
+                                    completed++;
+                                    if (completed === qrData.length) {
+                                        resolve(results);
+                                    }
+                                }
+                            };
+                            
+                            img.onerror = function() {
+                                clearTimeout(timeout);
+                                serviceResults[serviceIndex] = { success: false, time: 'error' };
+                                serviceCompleted++;
+                                if (serviceCompleted === qrServices.length) {
+                                    results[index] = {
+                                        passport: data.passport,
+                                        services: serviceResults
+                                    };
+                                    completed++;
+                                    if (completed === qrData.length) {
+                                        resolve(results);
+                                    }
+                                }
+                            };
+                            
+                            img.src = url;
+                        });
+                    });
+                });
+            }
+
+            // Show QR Test Results
+            function showQRTestResults(results) {
+                let modalContent = `
+                    <div class="modal fade" id="qrTestModal" tabindex="-1">
+                        <div class="modal-dialog modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">ผลการทดสอบ QR Services</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>รหัสพนักงาน</th>
+                                                <th>QR Server API</th>
+                                                <th>Google Charts</th>
+                                                <th>QuickChart</th>
+                                                <th>สถานะ</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>`;
+
+                results.forEach(function(result) {
+                    const services = result.services;
+                    const workingCount = services.filter(s => s.success).length;
+                    const statusClass = workingCount > 0 ? 'success' : 'danger';
+                    const statusText = workingCount > 0 ? `${workingCount}/3 ใช้งานได้` : 'ทุกบริการล้มเหลว';
+                    
+                    modalContent += `
+                        <tr class="table-${statusClass}">
+                            <td>${result.passport}</td>
+                            <td>${services[0].success ? '✅ ' + services[0].time : '❌ ' + services[0].time}</td>
+                            <td>${services[1].success ? '✅ ' + services[1].time : '❌ ' + services[1].time}</td>
+                            <td>${services[2].success ? '✅ ' + services[2].time : '❌ ' + services[2].time}</td>
+                            <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+                        </tr>`;
+                });
+
+                modalContent += `
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                
+                // Remove existing modal and add new one
+                $('#qrTestModal').remove();
+                $('body').append(modalContent);
+                $('#qrTestModal').modal('show');
+            }
 
             // Initialize popovers
             $('[data-bs-toggle="popover"]').popover();
@@ -895,7 +1378,326 @@
             $('#show-massupdate').change(function() {
                 $('#div-massupdate').toggle(this.checked);
             });
+
+            // QR Code Handler Functions
+            window.handleQRLoad = function(img) {
+                const labourId = img.getAttribute('data-labour-id');
+                const $img = $(img);
+                const $loading = $(`#qr-loading-${labourId}`);
+                const $fallback = $img.siblings('.qr-fallback');
+                const $status = $(`#qr-status-${labourId}`);
+                
+                console.log(`QR Code loaded successfully for labour ${labourId}`);
+                
+                $loading.hide();
+                $img.show();
+                $fallback.hide();
+                $status.removeClass('loading error').addClass('success');
+                
+                setTimeout(() => $status.fadeOut(), 2000);
+            };
             
+            window.handleQRError = function(img) {
+                const labourId = img.getAttribute('data-labour-id');
+                const passport = img.getAttribute('data-passport');
+                const $img = $(img);
+                const $loading = $(`#qr-loading-${labourId}`);
+                const $fallback = $img.siblings('.qr-fallback');
+                const $status = $(`#qr-status-${labourId}`);
+                
+                console.warn(`QR Code failed for labour ${labourId}, trying alternative services`);
+                
+                // Try multiple alternative services in sequence
+                const alternatives = [
+                    `https://chart.googleapis.com/chart?chs=60x60&cht=qr&chl=${encodeURIComponent(passport)}`,
+                    `https://quickchart.io/qr?text=${encodeURIComponent(passport)}&size=60`,
+                    `https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(passport)}&ecc=L&format=png&margin=0`
+                ];
+                
+                let attemptIndex = 0;
+                
+                function tryNextService() {
+                    if (attemptIndex < alternatives.length) {
+                        const serviceUrl = alternatives[attemptIndex];
+                        console.log(`Trying service ${attemptIndex + 1} for labour ${labourId}: ${serviceUrl.substring(0, 50)}...`);
+                        
+                        $img.off('error').on('error', function() {
+                            attemptIndex++;
+                            console.warn(`Service ${attemptIndex} failed for labour ${labourId}`);
+                            
+                            if (attemptIndex < alternatives.length) {
+                                setTimeout(tryNextService, 500); // Wait 500ms before trying next service
+                            } else {
+                                console.error(`All QR services failed for labour ${labourId}`);
+                                $loading.hide();
+                                $img.hide();
+                                $fallback.show();
+                                $status.removeClass('loading success').addClass('error');
+                            }
+                        }).attr('src', serviceUrl);
+                        
+                        attemptIndex++;
+                    }
+                }
+                
+                tryNextService();
+            };
+            
+            window.retryQRCode = function(fallbackElement) {
+                const $fallback = $(fallbackElement);
+                const $img = $fallback.siblings('.qr-code-img');
+                const labourId = $img.attr('data-labour-id');
+                const passport = $img.attr('data-passport');
+                const $loading = $fallback.siblings('.qr-loading');
+                const $status = $(`#qr-status-${labourId}`);
+                
+                console.log(`Retrying QR Code for labour ${labourId}`);
+                
+                $fallback.hide();
+                $loading.show();
+                $status.removeClass('error success').addClass('loading');
+                
+                // Reset and retry with original service + timestamp
+                const originalUrl = `https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(passport)}&t=${Date.now()}`;
+                $img.attr('src', originalUrl);
+            };
+
+            // QR Code Error Handling and Retry
+            function initializeQRCodes() {
+                console.log('Initializing QR Codes...');
+                const $allImages = $('.qr-code-img');
+                console.log(`Found ${$allImages.length} QR codes to load`);
+                
+                // Load all QR codes immediately but with staggered delays
+                $allImages.each(function(index) {
+                    const $img = $(this);
+                    const labourId = $img.attr('data-labour-id');
+                    const $loading = $(`#qr-loading-${labourId}`);
+                    const delay = index * 100; // 100ms between each QR code
+                    
+                    console.log(`Scheduling QR Code ${index + 1}/${$allImages.length} for labour ${labourId} with ${delay}ms delay`);
+                    
+                    setTimeout(() => {
+                        console.log(`Loading QR Code for labour ${labourId}`);
+                        const currentSrc = $img.attr('src');
+                        // Force trigger load by setting src again
+                        $img.attr('src', currentSrc + (currentSrc.includes('?') ? '&' : '?') + 'cache=' + Date.now());
+                        
+                        // Timeout สำหรับการโหลด QR Code นี้
+                        setTimeout(function() {
+                            if ($img[0] && !$img[0].complete && $img.is(':hidden')) {
+                                console.warn(`QR Code ${labourId} taking too long to load, triggering error`);
+                                $img.trigger('error');
+                            }
+                        }, 10000); // 10 วินาที timeout
+                        
+                    }, delay);
+                });
+                
+                // Check for any remaining unloaded QR codes after 30 seconds
+                setTimeout(() => {
+                    const $unloadedImages = $('.qr-code-img:hidden');
+                    if ($unloadedImages.length > 0) {
+                        console.warn(`${$unloadedImages.length} QR codes still not loaded, forcing fallback`);
+                        $unloadedImages.each(function() {
+                            const labourId = $(this).attr('data-labour-id');
+                            console.log(`Forcing fallback for labour ${labourId}`);
+                            $(this).trigger('error');
+                        });
+                    } else {
+                        console.log('All QR codes loaded successfully!');
+                    }
+                }, 30000);
+            }
+            
+            // เรียกใช้งานหลังจากโหลดหน้าเสร็จ
+            initializeQRCodes();
+            
+            // Force load all QR codes (for debugging and fixing missing QRs)
+            window.forceLoadAllQRCodes = function() {
+                console.log('Force loading ALL QR codes...');
+                const $allImages = $('.qr-code-img');
+                
+                $allImages.each(function(index) {
+                    const $img = $(this);
+                    const labourId = $img.attr('data-labour-id');
+                    const passport = $img.attr('data-passport');
+                    const $loading = $(`#qr-loading-${labourId}`);
+                    const $fallback = $img.siblings('.qr-fallback');
+                    const $status = $(`#qr-status-${labourId}`);
+                    
+                    console.log(`Force loading QR ${index + 1}: Labour ${labourId}`);
+                    
+                    // Reset all states
+                    $fallback.hide();
+                    $loading.show();
+                    $img.hide();
+                    if ($status.length) {
+                        $status.removeClass('success error').addClass('loading');
+                    }
+                    
+                    // Force reload with cache busting
+                    const timestamp = Date.now() + index; // Unique timestamp for each
+                    const newSrc = `https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(passport)}&t=${timestamp}`;
+                    
+                    setTimeout(() => {
+                        $img.attr('src', newSrc);
+                    }, index * 50); // 50ms delay between each
+                });
+            };
+            
+            // Retry only failed QR codes
+            window.retryFailedQRCodes = function() {
+                console.log('Retrying failed QR codes...');
+                const $failedImages = $('.qr-fallback:visible').siblings('.qr-code-img');
+                
+                console.log(`Found ${$failedImages.length} failed QR codes`);
+                
+                $failedImages.each(function(index) {
+                    const $img = $(this);
+                    const labourId = $img.attr('data-labour-id');
+                    const $fallback = $img.siblings('.qr-fallback');
+                    
+                    console.log(`Retrying QR for labour ${labourId}`);
+                    if ($fallback.length) {
+                        retryQRCode($fallback[0]);
+                    }
+                });
+            };
+            
+            // Check QR code loading status
+            window.checkQRStatus = function() {
+                const $allImages = $('.qr-code-img');
+                const $visibleImages = $('.qr-code-img:visible');
+                const $failedImages = $('.qr-fallback:visible');
+                const $loadingImages = $('.qr-loading:visible');
+                
+                console.log('QR Code Status:');
+                console.log(`Total QR codes: ${$allImages.length}`);
+                console.log(`Successfully loaded: ${$visibleImages.length}`);
+                console.log(`Failed (showing fallback): ${$failedImages.length}`);
+                console.log(`Still loading: ${$loadingImages.length}`);
+                
+                return {
+                    total: $allImages.length,
+                    loaded: $visibleImages.length,
+                    failed: $failedImages.length,
+                    loading: $loadingImages.length
+                };
+            };
+            
+            // Test QR Code generation
+            window.testQRCode = function(data = 'TEST123456') {
+                const testUrls = [
+                    `https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(data)}`,
+                    `https://chart.googleapis.com/chart?chs=60x60&cht=qr&chl=${encodeURIComponent(data)}`,
+                    `https://quickchart.io/qr?text=${encodeURIComponent(data)}&size=60`
+                ];
+                
+                testUrls.forEach((url, index) => {
+                    const img = new Image();
+                    img.onload = () => console.log(`QR Service ${index + 1} working: ${url}`);
+                    img.onerror = () => console.warn(`QR Service ${index + 1} failed: ${url}`);
+                    img.src = url;
+                });
+            };
+            
+            // Monitor page changes for pagination
+            function setupPaginationObserver() {
+                // Observer for new content loaded via pagination
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'childList') {
+                            const addedNodes = Array.from(mutation.addedNodes);
+                            const hasNewQRCodes = addedNodes.some(node => 
+                                node.nodeType === 1 && 
+                                (node.classList?.contains('qr-code-img') || 
+                                 node.querySelector?.('.qr-code-img'))
+                            );
+                            
+                            if (hasNewQRCodes) {
+                                console.log('New QR codes detected from pagination, initializing...');
+                                setTimeout(initializeQRCodes, 100);
+                            }
+                        }
+                    });
+                });
+                
+                const tableBody = document.querySelector('tbody');
+                if (tableBody) {
+                    observer.observe(tableBody, {
+                        childList: true,
+                        subtree: true
+                    });
+                    console.log('Pagination observer setup for table body');
+                }
+            }
+            
+            // Setup pagination click handlers
+            function setupPaginationHandlers() {
+                $(document).on('click', '.pagination a', function(e) {
+                    console.log('Pagination link clicked, will reinitialize QR codes after page load');
+                    
+                    // Multiple retry attempts with increasing delays
+                    const retryDelays = [300, 800, 1500, 3000];
+                    
+                    retryDelays.forEach((delay, index) => {
+                        setTimeout(function() {
+                            console.log(`QR retry attempt ${index + 1} after pagination (delay: ${delay}ms)`);
+                            const $newQRCodes = $('.qr-code-img');
+                            if ($newQRCodes.length > 0) {
+                                initializeQRCodes();
+                            }
+                        }, delay);
+                    });
+                });
+                
+                console.log('Pagination handlers setup');
+            }
+            
+            // Detect page visibility changes and refresh QR codes
+            function setupVisibilityHandler() {
+                document.addEventListener('visibilitychange', function() {
+                    if (!document.hidden) {
+                        console.log('Page became visible, checking QR codes...');
+                        setTimeout(function() {
+                            const status = checkQRStatus();
+                            if (status.failed > 0) {
+                                console.log(`Found ${status.failed} failed QR codes, retrying...`);
+                                retryFailedQRCodes();
+                            }
+                        }, 1000);
+                    }
+                });
+                
+                console.log('Visibility change handler setup');
+            }
+            
+            // Auto-retry mechanism for failed QR codes
+            function setupAutoRetry() {
+                setInterval(function() {
+                    const $failedImages = $('.qr-fallback:visible');
+                    if ($failedImages.length > 0) {
+                        console.log(`Auto-retrying ${$failedImages.length} failed QR codes...`);
+                        retryFailedQRCodes();
+                    }
+                }, 10000); // Retry every 10 seconds
+                
+                console.log('Auto-retry mechanism setup (every 10 seconds)');
+            }
+            
+            // Initialize all systems
+            setupPaginationObserver();
+            setupPaginationHandlers();
+            setupVisibilityHandler();
+            setupAutoRetry();
+            
+            console.log('QR Code initialization complete.');
+            console.log('Available commands:');
+            console.log('  - checkQRStatus() : ตรวจสอบสถานะ QR codes');
+            console.log('  - forceLoadAllQRCodes() : บังคับโหลด QR codes ทั้งหมดใหม่');
+            console.log('  - retryFailedQRCodes() : ลองโหลด QR codes ที่ล้มเหลวใหม่');
+            console.log('  - testQRCode() : ทดสอบ QR services');
             console.log('Initialization complete');
         });
     </script>
