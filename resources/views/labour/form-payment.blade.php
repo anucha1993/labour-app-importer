@@ -362,9 +362,15 @@
                             <div class="row">
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label>ชื่อประเภทที่หัก</label>
+                                        <label>ประเภทการหัก</label>
                                         <div class="input-group">
-                                            <input type="text" class="form-control payment-name" value="${type.payment_name}" required readonly>
+                                            <select class="form-control payment-name" required disabled>
+                                                <option value="">เลือกประเภทการหัก</option>
+                                                <option value="ต่อรายงานตัว 90 วัน" ${type.payment_name === 'ต่อรายงานตัว 90 วัน' ? 'selected' : ''}>ต่อรายงานตัว 90 วัน</option>
+                                                <option value="ต่อใบอนุญาตทำงาน" ${type.payment_name === 'ต่อใบอนุญาตทำงาน' ? 'selected' : ''}>ต่อใบอนุญาตทำงาน</option>
+                                                <option value="ต่อวีซ่า" ${type.payment_name === 'ต่อวีซ่า' ? 'selected' : ''}>ต่อวีซ่า</option>
+                                                <option value="ต่ออายุหนังสือเดินทาง" ${type.payment_name === 'ต่ออายุหนังสือเดินทาง' ? 'selected' : ''}>ต่ออายุหนังสือเดินทาง</option>
+                                            </select>
                                             <div class="input-group-append">
                                                 <button type="button" class="btn btn-warning btn-sm toggle-edit" data-field="payment-name" title="แก้ไข">
                                                     <i class="fas fa-edit"></i>
@@ -589,7 +595,7 @@ $('#savePaymentTypes').click(function() {
 
                 if (fieldType === 'payment-name' && !input.val().trim()) {
                     isValid = false;
-                    errorMessage = 'กรุณากรอกชื่อประเภทที่หัก';
+                    errorMessage = 'กรุณาเลือกประเภทการหัก';
                 } else if (fieldType === 'total-amount') {
                     const amount = parseFloat(input.val());
                     if (isNaN(amount) || amount <= 0) {
@@ -636,9 +642,9 @@ $('#savePaymentTypes').click(function() {
             // เปิดให้แก้ไขทุกฟิลด์สำหรับรายการใหม่
             const lastItem = $('#paymentTypesList .payment-type-item:last');
             
-            // เปิดการแก้ไขชื่อ
-            const nameInput = lastItem.find('.payment-name');
-            nameInput.prop('readonly', false);
+            // เปิดการแก้ไขชื่อ (select)
+            const nameSelect = lastItem.find('.payment-name');
+            nameSelect.prop('disabled', false);
             
             // เปิดการแก้ไขจำนวนเงิน
             const amountInput = lastItem.find('.total-amount');
@@ -656,8 +662,8 @@ $('#savePaymentTypes').click(function() {
                     .html('<i class="fas fa-save"></i>');
             });
             
-            // Focus ที่ชื่อประเภท
-            nameInput.focus();
+            // Focus ที่ select ประเภทการหัก
+            nameSelect.focus();
         });
 
         // Delete Payment Type

@@ -1,4 +1,5 @@
 
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <style>
     body, html { background: #f8f9fa; }
     .qr-mobile-container {
@@ -465,6 +466,18 @@
                 <div style="font-size: 0.8rem; color: #666;">ยอดค้างชำระ (บาท)</div>
             </div>
         </div>
+        
+        <!-- ปุ่มนำทางไปหน้าชำระเงิน -->
+        <div style="text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
+            <button id="addPaymentTypeBtn" class="pay-button" style="display: inline-flex; align-items: center; gap: 0.5rem; margin-right: 1rem;">
+                <i class="fas fa-plus"></i>
+                เพิ่มประเภทการหัก
+            </button>
+            <a href="{{ route('labour.paymentEdit', $labour->labour_id) }}" class="pay-button" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-credit-card"></i>
+                หน้าจัดการเต็ม
+            </a>
+        </div>
     </div>
 
     <!-- Payment Table -->
@@ -504,6 +517,10 @@
                                     <button class="btn-details" onclick="toggleDetails('detail-{{ $type->id }}')">
                                         <i class="expand-icon">▼</i> รายละเอียด
                                     </button>
+                                    <br>
+                                    <button class="pay-button" onclick="openPaymentModal({{ $type->id }}, '{{ $type->payment_name }}', {{ $remainingAmount }})" style="margin-top: 0.5rem; font-size: 0.7rem; padding: 0.3rem 0.6rem;">
+                                        <i class="fas fa-plus"></i> ชำระเงิน
+                                    </button>
                                 </td>
                             </tr>
                             <tr class="detail-row" id="detail-{{ $type->id }}" style="display: none;">
@@ -534,6 +551,10 @@
                                 <td class="text-center">
                                     <button class="btn-details" onclick="toggleDetails('detail-{{ $type->id }}')">
                                         <i class="expand-icon">▼</i> รายละเอียด
+                                    </button>
+                                    <br>
+                                    <button class="pay-button" onclick="openPaymentModal({{ $type->id }}, '{{ $type->payment_name }}', {{ $remainingAmount }})" style="margin-top: 0.5rem; font-size: 0.7rem; padding: 0.3rem 0.6rem;">
+                                        <i class="fas fa-plus"></i> ชำระเงิน
                                     </button>
                                 </td>
                             </tr>
@@ -588,7 +609,189 @@
     @endif
 </div>
 
+<!-- Modal สำหรับเพิ่มประเภทการหัก -->
+<div id="addPaymentTypeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px;">
+        <h4 style="margin: 0 0 1rem 0;">เพิ่มประเภทการหัก</h4>
+        <form id="addPaymentTypeForm">
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ประเภทการหัก:</label>
+                <select id="paymentTypeName" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="">เลือกประเภทการหัก</option>
+                    <option value="ต่อรายงานตัว 90 วัน">ต่อรายงานตัว 90 วัน</option>
+                    <option value="ต่อใบอนุญาตทำงาน">ต่อใบอนุญาตทำงาน</option>
+                    <option value="ต่อวีซ่า">ต่อวีซ่า</option>
+                    <option value="ต่ออายุหนังสือเดินทาง">ต่ออายุหนังสือเดินทาง</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">จำนวนเงิน:</label>
+                <input type="number" id="paymentTypeAmount" step="0.01" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ประเภทการหัก:</label>
+                <select id="deductionType" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="salary">หักจากเงินเดือน</option>
+                    <option value="self_paid">แรงงานจ่ายเองทั้งหมด</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">หมายเหตุ:</label>
+                <input type="text" id="paymentTypeNote" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+            <div style="text-align: right; margin-top: 1.5rem;">
+                <button type="button" onclick="closePaymentTypeModal()" style="background: #666; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 5px; margin-right: 0.5rem; cursor: pointer;">ยกเลิก</button>
+                <button type="submit" style="background: #2196F3; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 5px; cursor: pointer;">บันทึก</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal สำหรับเพิ่มการชำระเงิน -->
+<div id="addPaymentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px;">
+        <h4 style="margin: 0 0 1rem 0;">เพิ่มการชำระเงิน</h4>
+        <div id="paymentInfo" style="background: #f5f5f5; padding: 1rem; border-radius: 5px; margin-bottom: 1rem;"></div>
+        <form id="addPaymentForm">
+            <input type="hidden" id="paymentTypeId">
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">จำนวนเงิน:</label>
+                <input type="number" id="paymentAmount" step="0.01" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">วันที่ชำระ:</label>
+                <input type="datetime-local" id="paymentDate" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">หลักฐานการชำระ:</label>
+                <input type="file" id="paymentProof" accept=".pdf,.jpg,.jpeg,.png" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+            <div style="text-align: right; margin-top: 1.5rem;">
+                <button type="button" onclick="closePaymentModal()" style="background: #666; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 5px; margin-right: 0.5rem; cursor: pointer;">ยกเลิก</button>
+                <button type="submit" style="background: #2196F3; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 5px; cursor: pointer;">บันทึก</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+const labourId = {{ $labour->labour_id }};
+
+// Setup CSRF token
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+// เพิ่มประเภทการหัก
+document.getElementById('addPaymentTypeBtn').addEventListener('click', function() {
+    document.getElementById('addPaymentTypeModal').style.display = 'block';
+});
+
+function closePaymentTypeModal() {
+    document.getElementById('addPaymentTypeModal').style.display = 'none';
+    document.getElementById('addPaymentTypeForm').reset();
+}
+
+document.getElementById('addPaymentTypeForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('_token', csrfToken);
+    formData.append('labour_id', labourId);
+    formData.append('payment_name', document.getElementById('paymentTypeName').value);
+    formData.append('total_amount', document.getElementById('paymentTypeAmount').value);
+    formData.append('deduction_type', document.getElementById('deductionType').value);
+    formData.append('note', document.getElementById('paymentTypeNote').value);
+    
+    fetch('/labour/payment-type', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('เพิ่มประเภทการหักสำเร็จ');
+            closePaymentTypeModal();
+            location.reload();
+        } else {
+            alert('เกิดข้อผิดพลาด: ' + (data.message || 'ไม่สามารถเพิ่มข้อมูลได้'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+    });
+});
+
+// เพิ่มการชำระเงิน
+function openPaymentModal(paymentTypeId, paymentName, remainingAmount) {
+    document.getElementById('paymentTypeId').value = paymentTypeId;
+    document.getElementById('paymentInfo').innerHTML = `
+        <strong>ประเภท:</strong> ${paymentName}<br>
+        <strong>ยอดคงเหลือ:</strong> ${remainingAmount.toLocaleString()} บาท
+    `;
+    document.getElementById('paymentAmount').max = remainingAmount;
+    
+    // Set current date/time
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('paymentDate').value = now.toISOString().slice(0, 16);
+    
+    document.getElementById('addPaymentModal').style.display = 'block';
+}
+
+function closePaymentModal() {
+    document.getElementById('addPaymentModal').style.display = 'none';
+    document.getElementById('addPaymentForm').reset();
+}
+
+document.getElementById('addPaymentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('_token', csrfToken);
+    formData.append('payment_type_id', document.getElementById('paymentTypeId').value);
+    formData.append('amount', document.getElementById('paymentAmount').value);
+    formData.append('payment_date', document.getElementById('paymentDate').value);
+    
+    const proofFile = document.getElementById('paymentProof').files[0];
+    if (proofFile) {
+        formData.append('proof_file', proofFile);
+    }
+    
+    fetch('/labour/payment-history', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('บันทึกการชำระเงินสำเร็จ');
+            closePaymentModal();
+            location.reload();
+        } else {
+            alert('เกิดข้อผิดพลาด: ' + (data.message || 'ไม่สามารถบันทึกข้อมูลได้'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+    });
+});
+
+// Close modal when clicking outside
+document.getElementById('addPaymentTypeModal').addEventListener('click', function(e) {
+    if (e.target === this) closePaymentTypeModal();
+});
+
+document.getElementById('addPaymentModal').addEventListener('click', function(e) {
+    if (e.target === this) closePaymentModal();
+});
+
 function toggleDetails(detailId) {
     const detailRow = document.getElementById(detailId);
     const button = event.target.closest('.btn-details');
