@@ -234,11 +234,11 @@
                     <input type="text" name="labour_tm_number" class="form-control" placeholder="เลขที่ ตม."
                         value="{{ $labour->labour_tm_number }}" required>
                 </div>
-                <div class="col-md-3">
+                {{-- <div class="col-md-3">
                     <label for="">รหัสพนักงาน </label>
                     <input type="text" name="labour_number" class="form-control" placeholder="Numner"
                         value="{{ $labour->labour_number }}">
-                </div>
+                </div> --}}
             </div>
 
 

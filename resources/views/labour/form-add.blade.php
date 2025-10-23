@@ -192,11 +192,11 @@
                     <label for="">เลขที่ ตม.</label>
                     <input type="text" name="labour_tm_number" class="form-control" placeholder="เลขที่ ตม.">
                 </div>
-
+{{-- 
                 <div class="col-md-3">
                     <label for="">รหัสพนักงาน </label>
                     <input type="text" name="labour_number" class="form-control" placeholder="Numner" >
-                </div>
+                </div> --}}
 
             </div>
 

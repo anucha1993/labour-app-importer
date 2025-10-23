@@ -214,7 +214,7 @@
 
                     <div class="col-md-2 mb-2 float-end">
                         <label for="">Search :</label>
-                         <input type="text" class="form-control" name="keyword" placeholder="ค้นหาข้อมูล" value="{{ $request->keyword }}">
+                         <input type="text" class="form-control" name="keyword" placeholder="ค้นหาข้อมูล เลขพาส,ชื่อ,เลขที่วีซ่า,ชื่อนายจ้าง,เอเจนซี่" value="{{ $request->keyword }}">
                     </div>
 
                     <div class="col-md-12 mb-2 float-end">
@@ -699,12 +699,8 @@
                 qrInput.toggle(isChecked);
                 
                 if (isChecked) {
-                    // Focus ทันทีและใช้ setTimeout เพื่อให้แน่ใจว่า focus ได้
-                    setTimeout(function() {
-                        qrInput.focus();
-                        qrInput.select(); // เลือกข้อความทั้งหมดถ้ามี
-                        console.log('QR Scanner input focused');
-                    }, 100);
+                    // แสดงช่อง input แต่ไม่ focus อัตโนมัติ
+                    console.log('QR Scanner enabled - input shown without auto focus');
                 } else {
                     qrInput.val('').blur();
                     console.log('QR Scanner input cleared and blurred');
@@ -724,17 +720,10 @@
                     }
                 });
 
-            // เมื่อ input สูญเสีย focus แล้วยังติ๊กอยู่ ให้ focus กลับมา
+            // เมื่อ input สูญเสีย focus แล้วยังติ๊กอยู่ - ปิดการ auto-focus กลับมา
             $('#qrScannerInput').off('blur').on('blur', function() {
-                const $this = $(this);
-                if ($('#useQrScanner').is(':checked')) {
-                    setTimeout(function() {
-                        if (!$this.is(':focus') && $('#useQrScanner').is(':checked')) {
-                            $this.focus();
-                            console.log('Re-focused QR Scanner input');
-                        }
-                    }, 100);
-                }
+                // ไม่ทำอะไร - ปล่อยให้ user focus เองตามต้องการ
+                console.log('QR Scanner input lost focus (no auto re-focus)');
             });
 
             // QR Scanner Input Handler - ใช้ debounce เพื่อป้องกันการเรียกซ้ำ

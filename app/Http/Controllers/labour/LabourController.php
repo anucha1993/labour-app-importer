@@ -128,15 +128,20 @@ class LabourController extends Controller
             return $query->whereBetween('labour_workpremit_date_end', [$start_date, $end_date]);
         })
         ->when($keyword, function ($query, $keyword) {
-            return $query->where(function ($q) use ($keyword) {
-                $q->whereHas('company', function ($q1) use ($keyword) {
-                        $q1->where('company_name', 'LIKE', '%' . $keyword . '%');
+            // ตัด space หน้าหลัง และแปลง space หลายตัวเป็น % wildcard สำหรับ LIKE
+            $cleanKeyword = trim($keyword);
+            // แทนที่ space หลายตัวด้วย % เพื่อให้ LIKE ค้นหาได้ยืดหยุ่น
+            $searchPattern = preg_replace('/\s+/', '%', $cleanKeyword);
+            
+            return $query->where(function ($q) use ($searchPattern) {
+                $q->whereHas('company', function ($q1) use ($searchPattern) {
+                        $q1->where('company_name', 'LIKE', '%' . $searchPattern . '%');
                     })
-                  ->orWhere('labour_passport_number', 'LIKE', '%' . $keyword . '%')
-                  ->orWhere('labour_visa_number', 'LIKE', '%' . $keyword . '%')
-                  ->orWhere('labour_fullname', 'LIKE', '%' . $keyword . '%')
-                  ->orWhereHas('agency', function ($q2) use ($keyword) {
-                        $q2->where('agency_name', 'LIKE', '%' . $keyword . '%');
+                  ->orWhere('labour_passport_number', 'LIKE', '%' . $searchPattern . '%')
+                  ->orWhere('labour_visa_number', 'LIKE', '%' . $searchPattern . '%')
+                  ->orWhere('labour_fullname', 'LIKE', '%' . $searchPattern . '%')
+                  ->orWhereHas('agency', function ($q2) use ($searchPattern) {
+                        $q2->where('agency_name', 'LIKE', '%' . $searchPattern . '%');
                   });
             });
         })

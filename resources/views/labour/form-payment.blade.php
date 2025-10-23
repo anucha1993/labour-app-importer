@@ -283,6 +283,26 @@
 
         // Function to generate payment type HTML for incomplete payments
         function generatePaymentTypeHtml(type) {
+            // ตรวจสอบว่าเป็นประเภท "อื่นๆ" หรือไม่
+            const predefinedTypes = ['ต่อรายงานตัว 90 วัน', 'ต่อใบอนุญาตทำงาน', 'ต่อวีซ่า', 'ต่ออายุหนังสือเดินทาง', 'จ่ายอื่นๆ'];
+            const isCustomType = type.payment_name && !predefinedTypes.includes(type.payment_name);
+            const selectValue = isCustomType ? 'อื่นๆ' : type.payment_name;
+            const customValue = isCustomType ? type.payment_name : '';
+            
+            // สร้าง options HTML 
+            const options = [
+                '<option value="">เลือกประเภทการหัก</option>',
+                `<option value="ต่อรายงานตัว 90 วัน"${selectValue === 'ต่อรายงานตัว 90 วัน' ? ' selected' : ''}>ต่อรายงานตัว 90 วัน</option>`,
+                `<option value="ต่อใบอนุญาตทำงาน"${selectValue === 'ต่อใบอนุญาตทำงาน' ? ' selected' : ''}>ต่อใบอนุญาตทำงาน</option>`,
+                `<option value="ต่อวีซ่า"${selectValue === 'ต่อวีซ่า' ? ' selected' : ''}>ต่อวีซ่า</option>`,
+                `<option value="ต่ออายุหนังสือเดินทาง"${selectValue === 'ต่ออายุหนังสือเดินทาง' ? ' selected' : ''}>ต่ออายุหนังสือเดินทาง</option>`,
+                `<option value="จ่ายอื่นๆ"${selectValue === 'จ่ายอื่นๆ' ? ' selected' : ''}>จ่ายอื่นๆ</option>`,
+                `<option value="อื่นๆ"${selectValue === 'อื่นๆ' ? ' selected' : ''}>อื่นๆ (ระบุเอง)</option>`
+            ].join('');
+            
+            // สร้างตัวแปรสำหรับ CSS display
+            const customDisplayStyle = isCustomType ? 'block' : 'none';
+            
             // คำนวณยอดรวมที่ชำระแล้ว
             const totalPaid = type.histories.reduce((sum, history) => sum + parseFloat(history.amount), 0);
             const remainingAmount = parseFloat(type.total_amount) - totalPaid;            const historyRows = type.histories.map(history => {
@@ -365,17 +385,19 @@
                                         <label>ประเภทการหัก</label>
                                         <div class="input-group">
                                             <select class="form-control payment-name" required disabled>
-                                                <option value="">เลือกประเภทการหัก</option>
-                                                <option value="ต่อรายงานตัว 90 วัน" ${type.payment_name === 'ต่อรายงานตัว 90 วัน' ? 'selected' : ''}>ต่อรายงานตัว 90 วัน</option>
-                                                <option value="ต่อใบอนุญาตทำงาน" ${type.payment_name === 'ต่อใบอนุญาตทำงาน' ? 'selected' : ''}>ต่อใบอนุญาตทำงาน</option>
-                                                <option value="ต่อวีซ่า" ${type.payment_name === 'ต่อวีซ่า' ? 'selected' : ''}>ต่อวีซ่า</option>
-                                                <option value="ต่ออายุหนังสือเดินทาง" ${type.payment_name === 'ต่ออายุหนังสือเดินทาง' ? 'selected' : ''}>ต่ออายุหนังสือเดินทาง</option>
+                                                ${options}
                                             </select>
                                             <div class="input-group-append">
                                                 <button type="button" class="btn btn-warning btn-sm toggle-edit" data-field="payment-name" title="แก้ไข">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
                                             </div>
+                                        </div>
+                                        <!-- ช่องสำหรับระบุประเภทการหักเอง -->
+                                        <div class="custom-payment-type" style="display: ${customDisplayStyle}; margin-top: 0.5rem; padding: 0.5rem; background: #e8f5e8; border: 2px solid #4CAF50; border-radius: 8px;">
+                                            <label style="display: block; margin-bottom: 0.3rem; font-weight: 600; color: #2e7d32; font-size: 0.9rem;">📝 ระบุประเภทการหักเอง:</label>
+                                            <input type="text" class="form-control custom-payment-input" placeholder="กรุณาระบุประเภทการหัก เช่น ต่อใบขับขี่, ต่อประกันสังคม ฯลฯ" value="${customValue}" disabled>
+                                            <small style="color: #2e7d32; font-size: 0.8rem; display: block; margin-top: 0.3rem;">💡 พิมพ์ชื่อประเภทการหักที่ต้องการ</small>
                                         </div>
                                     </div>
                                 </div>
@@ -623,6 +645,33 @@ $('#savePaymentTypes').click(function() {
                    .attr('title', 'แก้ไข')
                    .html('<i class="fas fa-edit"></i>');
             }
+        });
+
+        // Handle custom payment type selection
+        $(document).on('change', '.payment-name', function() {
+            const select = $(this);
+            const paymentItem = select.closest('.payment-type-item');
+            const customDiv = paymentItem.find('.custom-payment-type');
+            const customInput = paymentItem.find('.custom-payment-input');
+            
+            if (select.val() === 'อื่นๆ') {
+                customDiv.show();
+                if (!select.prop('disabled')) {
+                    customInput.prop('disabled', false);
+                    customInput.focus();
+                }
+            } else {
+                customDiv.hide();
+                customInput.prop('disabled', true);
+                customInput.val('');
+            }
+        });
+
+        // Handle custom payment input changes
+        $(document).on('input', '.custom-payment-input', function() {
+            const input = $(this);
+            const value = input.val().trim();
+            console.log('Custom payment type entered:', value);
         });
 
         // Payment Type Management
