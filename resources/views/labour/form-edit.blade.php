@@ -13,7 +13,7 @@
             </div>
 
             <div class="row">
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <label for="">คำนำหน้า :</label>
                     <select name="labour_prefix" class="form-select" required>
                         <option selected value="{{ $labour->labour_prefix }}">{{ $labour->labour_prefix }}</option>
@@ -29,7 +29,13 @@
                     <input type="text" name="labour_fullname" placeholder="Fullname" class="form-control"
                         value="{{ $labour->labour_fullname }}" required>
                 </div>
-                <div class="col-md-3">
+
+                  <div class="col-md-4">
+                    <label for="">ชื่อ-สกุล TH :</label>
+                    <input type="text" name="labour_fullname_th" placeholder="ชื่อภาษาไทย" value="{{ $labour->labour_fullname_th }}" class="form-control" >
+                </div>
+
+                <div class="col-md-1">
                     <label for="">เพศ</label>
                     <select name="labour_sex" class="form-control form-select" id="sex" required
                         placeholder="Fullname">
@@ -53,7 +59,7 @@
                         <option value="female">หญิง</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-1">
                     <label for="nationality">สัญชาติ :</label>
                     <select name="labour_nationality" class="form-control form-select" id="nationality" required>
                         <option selected value="{{ $labour->labour_nationality }}">{{ $labour->name_th }}</option>

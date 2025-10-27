@@ -94,6 +94,35 @@ class LabourController extends Controller
     }
 
     /**
+     * API endpoint for searching by labour number
+     */
+    public function findByLabourNumber($labourNumber)
+    {
+        try {
+            $labour = LabourModel::where('labour_number', $labourNumber)
+                ->with(['company', 'agency', 'paymentTypes.histories'])
+                ->firstOrFail();
+            
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'url' => route('labour.qrcodeDetail', $labour->labour_id)
+                ]);
+            }
+            
+            return redirect()->route('labour.qrcodeDetail', $labour->labour_id);
+        } catch (\Exception $e) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่พบข้อมูลรหัสพนักงาน'
+                ], 404);
+            }
+            return back()->with('error', 'ไม่พบข้อมูลรหัสพนักงาน');
+        }
+    }
+
+    /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response

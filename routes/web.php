@@ -46,6 +46,7 @@ Route::post('/district', [App\Http\Controllers\company\CompanyController::class,
 
 //Labour Search Routes
 Route::get('/labour/passport/{passportNumber}', [App\Http\Controllers\labour\LabourController::class, 'findByPassport'])->name('labour.findByPassport');
+Route::get('/labour/number/{labourNumber}', [App\Http\Controllers\labour\LabourController::class, 'findByLabourNumber'])->name('labour.findByLabourNumber');
 
 //Payment Routes
 Route::post('/labour/payment-type', [LabourPaymentController::class, 'storePaymentType']);

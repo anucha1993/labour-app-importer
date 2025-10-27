@@ -203,11 +203,11 @@
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox" id="useQrScanner" name="use_qr_scanner">
                             <label class="form-check-label" for="useQrScanner">
-                                ค้นหาด้วย QR Code/เลขที่หนังสือเดินทาง
+                                ค้นหาด้วย QR Code/เลขที่หนังสือเดินทาง/รหัสพนักงาน
                             </label>
                         </div>
                         <input type="text" class="form-control" id="qrScannerInput" name="qr_code" 
-                               placeholder="สแกน QR Code หรือป้อนเลขหนังสือเดินทาง..." 
+                               placeholder="สแกน QR Code หรือป้อนเลขหนังสือเดินทาง/รหัสพนักงาน..." 
                                style="display: none;"
                                value="{{ $request->qr_code }}">
                     </div>
@@ -322,9 +322,9 @@
         <tbody>
             @forelse ($labours as $key => $item)
                 <tr>
-                    <td><input type="checkbox" name="labour_ids[]"  value="{{ $item->labour_id }}"></td>
+                    <td><input type="checkbox" name="labour_ids[]"  value="{{ $item->labour_id }}" data-fullname-th="{{ $item->labour_fullname_th }}"></td>
                     <td>{{++$key}}</td>
-                    <td>{{$item->labour_prefix}}.{{$item->labour_fullname}}</td>
+                    <td>{{$item->labour_prefix}}.{{$item->labour_fullname}}<br> {{$item->labour_fullname_th}}</td>
                     <td>{{$item->labour_passport_number}}</td>
                     <td>{{$item->labour_number}}</td>
 
@@ -742,8 +742,8 @@
                     console.log('Processing input:', input);
                     
                     if (!input.startsWith('http')) {
-                        // ค้นหาด้วยเลขพาสปอร์ต
-                        searchByPassport(input);
+                        // ค้นหาด้วยเลขพาสปอร์ตหรือรหัสพนักงาน
+                        searchByPassportOrLabourNumber(input);
                     } else {
                         // ค้นหาด้วย URL
                         loadQrCodeData(input);
@@ -761,15 +761,17 @@
                 loadQrCodeData(url);
             });
 
-            // ฟังก์ชันค้นหาด้วยเลขพาสปอร์ต
-            function searchByPassport(passportNumber) {
-                console.log('Searching by passport:', passportNumber);
+            // ฟังก์ชันค้นหาด้วยเลขพาสปอร์ตหรือรหัสพนักงาน
+            function searchByPassportOrLabourNumber(searchValue) {
+                console.log('Searching by passport or labour number:', searchValue);
                 
                 // ค้นหาในตารางปัจจุบันก่อน
                 let found = false;
                 $('table#labour tbody tr').each(function() {
-                    const rowPassport = $(this).find('td:nth-child(4)').text().trim();
-                    if (rowPassport === passportNumber) {
+                    const rowPassport = $(this).find('td:nth-child(4)').text().trim(); // passport column
+                    const rowLabourNumber = $(this).find('td:nth-child(5)').text().trim(); // labour number column
+                    
+                    if (rowPassport === searchValue || rowLabourNumber === searchValue) {
                         found = true;
                         const qrUrl = $(this).find('.qr-code-link').attr('href');
                         if (qrUrl) {
@@ -781,10 +783,12 @@
                 });
                 
                 if (!found) {
-                    // ค้นหาผ่าน API
+                    // ค้นหาผ่าน API - ลองทั้ง passport และ labour number
                     console.log('Not found in table, trying API');
+                    
+                    // ลองค้นหาด้วยพาสปอร์ตก่อน
                     $.ajax({
-                        url: `/labour/passport/${passportNumber}`,
+                        url: `/labour/passport/${searchValue}`,
                         method: 'GET',
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest'
@@ -793,15 +797,38 @@
                             if (response.success && response.url) {
                                 loadQrCodeData(response.url);
                             } else {
-                                alert('ไม่พบข้อมูลเลขที่หนังสือเดินทาง');
+                                // หากไม่พบด้วยพาสปอร์ต ลองค้นด้วยรหัสพนักงาน
+                                searchByLabourNumberAPI(searchValue);
                             }
                         },
                         error: function(xhr) {
-                            console.error('API Error:', xhr);
-                            alert('ไม่พบข้อมูลเลขที่หนังสือเดินทาง');
+                            console.log('Passport search failed, trying labour number');
+                            searchByLabourNumberAPI(searchValue);
                         }
                     });
                 }
+            }
+            
+            // ฟังก์ชันค้นหาด้วยรหัสพนักงานผ่าน API
+            function searchByLabourNumberAPI(labourNumber) {
+                $.ajax({
+                    url: `/labour/number/${labourNumber}`,
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    success: function(response) {
+                        if (response.success && response.url) {
+                            loadQrCodeData(response.url);
+                        } else {
+                            alert('ไม่พบข้อมูลรหัสพนักงานหรือเลขที่หนังสือเดินทาง');
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Labour Number API Error:', xhr);
+                        alert('ไม่พบข้อมูลรหัสพนักงานหรือเลขที่หนังสือเดินทาง');
+                    }
+                });
             }
 
             // ฟังก์ชันโหลดข้อมูล QR Code
@@ -989,10 +1016,12 @@
                         let row = $(this).closest('tr');
                         let qrUrl = row.find('.qr-code-link').attr('href');
                         let passportNumber = row.find('td:nth-child(5)').text().trim();
+                        let fullnameTh = $(this).data('fullname-th') || '';
                         
                         qrData.push({
                             url: qrUrl,
-                            passport: passportNumber
+                            passport: passportNumber,
+                            fullnameTh: fullnameTh
                         });
                     });
 
@@ -1008,8 +1037,9 @@
 
                         let printContent = '<html><head><style>' +
                             'table.qr-table { border-collapse: collapse; }' +
-                            'table.qr-table td { border: 1.5px dashed #333; width: 180px; height: 220px; padding: 10px; text-align: center; vertical-align: middle; }' +
-                            '.qr-info { font-size: 15px; font-weight: bold; margin-top: 4px; text-align: center; }' +
+                            'table.qr-table td { border: 1.5px dashed #333; width: 180px; height: 250px; padding: 10px; text-align: center; vertical-align: middle; }' +
+                            '.qr-info { font-size: 14px; font-weight: bold; margin-top: 4px; text-align: center; }' +
+                            '.qr-name-th { font-size: 12px; color: #555; margin-top: 2px; text-align: center; }' +
                             '.qr-fallback { font-size: 12px; color: #666; }' +
                             '@media print { body { margin: 0; } td { page-break-inside: avoid; } }' +
                             '</style></head><body><table class="qr-table"><tr>';
@@ -1017,10 +1047,12 @@
                         let colCount = 0;
                         loadedQRCodes.forEach(function(qrCode) {
                             if (qrCode.success) {
-                                printContent += `<td><img src="${qrCode.src}" style="max-width: 100px; max-height: 100px;" /><div class="qr-info">รหัสพนักงาน: ${qrCode.passport}</div></td>`;
+                                let nameThDisplay = qrCode.fullnameTh ? `<div class="qr-name-th">${qrCode.fullnameTh}</div>` : '';
+                                printContent += `<td><img src="${qrCode.src}" style="max-width: 100px; max-height: 100px;" /><div class="qr-info">รหัสพนักงาน: ${qrCode.passport}</div>${nameThDisplay}</td>`;
                             } else {
                                 // Fallback for failed QR codes
-                                printContent += `<td><div style="width: 100px; height: 100px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; margin: 0 auto;"><div class="qr-fallback">QR Code<br>ไม่สามารถโหลดได้</div></div><div class="qr-info">รหัสพนักงาน: ${qrCode.passport}</div></td>`;
+                                let nameThDisplay = qrCode.fullnameTh ? `<div class="qr-name-th">${qrCode.fullnameTh}</div>` : '';
+                                printContent += `<td><div style="width: 100px; height: 100px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; margin: 0 auto;"><div class="qr-fallback">QR Code<br>ไม่สามารถโหลดได้</div></div><div class="qr-info">รหัสพนักงาน: ${qrCode.passport}</div>${nameThDisplay}</td>`;
                             }
                             colCount++;
                             if (colCount % 2 === 0) printContent += '</tr><tr>';
@@ -1072,6 +1104,7 @@
                                 results[index] = {
                                     success: false,
                                     passport: qrData.passport,
+                                    fullnameTh: qrData.fullnameTh,
                                     src: null
                                 };
                                 completed++;
@@ -1095,6 +1128,7 @@
                                 results[index] = {
                                     success: true,
                                     passport: qrData.passport,
+                                    fullnameTh: qrData.fullnameTh,
                                     src: fullUrl
                                 };
                                 completed++;
@@ -1135,10 +1169,12 @@
                         let row = $(this).closest('tr');
                         let qrUrl = row.find('.qr-code-link').attr('href');
                         let passportNumber = row.find('td:nth-child(5)').text().trim();
+                        let fullnameTh = $(this).data('fullname-th') || '';
                         
                         qrData.push({
                             url: qrUrl,
-                            passport: passportNumber
+                            passport: passportNumber,
+                            fullnameTh: fullnameTh
                         });
                     });
 
@@ -1165,10 +1201,12 @@
                         let row = $(this).closest('tr');
                         let qrUrl = row.find('.qr-code-link').attr('href');
                         let passportNumber = row.find('td:nth-child(5)').text().trim();
+                        let fullnameTh = $(this).data('fullname-th') || '';
                         
                         qrData.push({
                             url: qrUrl,
-                            passport: passportNumber
+                            passport: passportNumber,
+                            fullnameTh: fullnameTh
                         });
                     });
 
@@ -1194,6 +1232,7 @@
                                     <div class="row">`;
                 
                 qrData.forEach(function(data, index) {
+                    let nameThDisplay = data.fullnameTh ? `<small class="text-primary d-block">${data.fullnameTh}</small>` : '';
                     modalContent += `
                         <div class="col-md-3 mb-3 text-center">
                             <div class="card">
@@ -1202,6 +1241,7 @@
                                          class="img-fluid mb-2" 
                                          onerror="this.src='https://chart.googleapis.com/chart?chs=120x120&cht=qr&chl=${encodeURIComponent(data.passport)}'" />
                                     <small class="text-muted d-block">รหัส: ${data.passport}</small>
+                                    ${nameThDisplay}
                                 </div>
                             </div>
                         </div>`;

@@ -13,7 +13,7 @@
             </div>
 
             <div class="row">
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <label for="">คำนำหน้า :</label>
                     <select name="labour_prefix" class="form-select" required>
                         <option value="Mr">Mr.</option>
@@ -22,18 +22,23 @@
                     </select>
                 </div>
 
-                <div class="col-md-4">
-                    <label for="">ชื่อ-สกุล :</label>
-                    <input type="text" name="labour_fullname" placeholder="Fullname" class="form-control" required>
+                <div class="col-md-5">
+                    <label for="">ชื่อ-สกุล EN:</label>
+                    <input type="text" name="labour_fullname" placeholder="Fullname EN" class="form-control" required>
                 </div>
-                <div class="col-md-3">
+                  <div class="col-md-4">
+                    <label for="">ชื่อ-สกุล TH :</label>
+                    <input type="text" name="labour_fullname_th" placeholder="ชื่อภาษาไทย" class="form-control" >
+                </div>
+
+                <div class="col-md-1">
                     <label for="">เพศ</label>
                     <select name="labour_sex" class="form-control form-select" id="sex" required  placeholder="Fullname">
                         <option value="male">ชาย</option>
                         <option value="female">หญิง</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-1">
                     <label for="nationality">สัญชาติ :</label>
                    <select name="labour_nationality" class="form-control form-select" id="nationality" required >
                     @foreach ($nationality as $item)

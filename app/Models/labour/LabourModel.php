@@ -20,6 +20,7 @@ class LabourModel extends Model
         "labour_prefix",
         "labour_number",
         "labour_fullname",
+        "labour_fullname_th",
         "labour_sex",
         "labour_nationality",
         "labour_agency",
